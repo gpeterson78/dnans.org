@@ -1,0 +1,62 @@
+# debian_host.yaml
+---
+- hosts: debian_servers
+  become: yes
+  vars_files:
+    - platform_vars.yaml
+    - vault.yaml      # Securely load root password if needed
+
+  tasks:
+    - name: Update apt package list
+      apt:
+        update_cache: yes
+
+    - name: Install sudo
+      apt:
+        name: sudo
+        state: present
+
+    - name: Create user if not exists
+      user:
+        name: "{{ sudo_user }}"
+        groups: sudo
+        append: yes
+        state: present  # Ensures user is created if it doesn't exist
+
+    - name: Install required packages for Docker
+      apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: yes
+      loop:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - gnupg
+        - lsb-release
+
+    - name: Add Docker’s official GPG key
+      apt_key:
+        url: https://download.docker.com/linux/debian/gpg
+        state: present
+
+    - name: Set up Docker stable repository
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
+        state: present
+
+    - name: Install Docker and Docker Compose
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: present
+        update_cache: yes
+
+    - name: Add sudo_user to Docker group
+      user:
+        name: "{{ sudo_user }}"
+        groups: docker
+        append: yes
