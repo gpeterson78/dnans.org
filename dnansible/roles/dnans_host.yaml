@@ -1,0 +1,48 @@
+---
+- hosts: all
+  become: yes
+  vars:
+    project_root: "/snand"
+    ansible_user: "ansible_user"
+
+  tasks:
+    - name: Create Ansible user and group
+      user:
+        name: "{{ ansible_user }}"
+        shell: /bin/bash
+        create_home: yes
+        groups: sudo
+        append: yes
+
+    - name: Authorize SSH key for Ansible user
+      authorized_key:
+        user: "{{ ansible_user }}"
+        state: present
+        key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+    - name: Update apt packages
+      apt:
+        update_cache: yes
+        upgrade: dist
+
+    - name: Install Docker and Docker Compose
+      include_role:
+        name: docker_setup
+
+    - name: Configure project environment path
+      file:
+        path: "{{ project_root }}"
+        state: directory
+        mode: "0755"
+
+    - name: Install utilities (lazydocker and mc)
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - lazydocker
+        - mc
+
+    - name: Configure SMB share
+      include_role:
+        name: smb_setup

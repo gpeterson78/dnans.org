@@ -1,0 +1,2 @@
+[docker_hosts]
+debian_server ansible_host=<your_server_ip> ansible_user=<username>
