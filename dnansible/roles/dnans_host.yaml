@@ -1,25 +1,18 @@
 # debian_host.yaml
 ---
 - hosts: debian_servers
-  gather_facts: no  # Disable automatic fact gathering
-  become: no        # Disable privilege escalation for fact gathering
+  become: yes
+  vars_files:
+    - platform_vars.yaml
 
   tasks:
-    - name: Gather minimal facts without sudo
-      setup:
-        gather_subset:
-          - '!all'
-          - 'min'  # Gathers minimal facts like networking info
-
     - name: Install sudo
-      become: yes   # Re-enable privilege escalation for the task
       apt:
         name: sudo
         state: present
         update_cache: yes
 
     - name: Add user to sudoers group
-      become: yes
       user:
         name: "{{ sudo_user }}"
         groups: sudo
@@ -27,13 +20,11 @@
         state: present
 
     - name: Update all packages to the latest version
-      become: yes
       apt:
         upgrade: dist
         update_cache: yes
 
     - name: Install Docker and Docker Compose dependencies
-      become: yes
       apt:
         name: "{{ item }}"
         state: present
@@ -45,19 +36,16 @@
         - lsb-release
 
     - name: Add Docker GPG key
-      become: yes
       apt_key:
         url: https://download.docker.com/linux/debian/gpg
         state: present
 
     - name: Add Docker repository
-      become: yes
       apt_repository:
         repo: "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
         state: present
 
     - name: Install Docker and Docker Compose
-      become: yes
       apt:
         name:
           - docker-ce
@@ -68,14 +56,12 @@
         update_cache: yes
 
     - name: Add user to Docker group
-      become: yes
       user:
         name: "{{ sudo_user }}"
         groups: docker
         append: yes
 
     - name: Install lazydocker and mc
-      become: yes
       apt:
         name:
           - lazydocker
