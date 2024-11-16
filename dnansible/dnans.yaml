@@ -8,8 +8,8 @@
 
   roles:
     - dnans_host          # Base Docker host setup
-    - dnans_smb           # SMB configuration
-    - dnans_ingress       # traefik/cloudflare/letsencrypt
-    - dnans_immich        # immich docker compose setup
-    - dnans_wordpress     # WordPress Docker Compose setup
+#    - dnans_smb           # SMB configuration
+#    - dnans_ingress       # traefik/cloudflare/letsencrypt
+#    - dnans_immich        # immich docker compose setup
+#    - dnans_wordpress     # WordPress Docker Compose setup
     # Additional roles can be added here as needed
