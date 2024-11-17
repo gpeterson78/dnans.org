@@ -10,8 +10,3 @@
     - dnans_smb
     # Additional roles will be added as the project expands
     # - dnans_ingress
-- name: Ping servers
-  hosts: all
-  tasks:
-    - name: Ping the server
-      ping:
