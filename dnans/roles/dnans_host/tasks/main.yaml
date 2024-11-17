@@ -12,7 +12,7 @@
 
 - name: Add user to Docker group
   user:
-    name: "{{ sudo_user }}"
+    name: "{{ ansible_user }}"
     groups: docker
     append: yes
 

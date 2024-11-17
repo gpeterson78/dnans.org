@@ -1,0 +1,57 @@
+# roles/dnans_smb/tasks/main.yaml
+---
+- name: Install Samba
+  apt:
+    name: samba
+    state: present
+    update_cache: yes
+
+- name: Ensure /snand/shared directory exists
+  file:
+    path: /snand/shared
+    state: directory
+    mode: '0777'
+
+- name: Ensure Samba configuration file is backed up
+  copy:
+    src: /etc/samba/smb.conf
+    dest: /etc/samba/smb.conf.bak
+    remote_src: yes
+    backup: yes
+
+- name: Configure SMB share for /snand/shared
+  blockinfile:
+    path: /etc/samba/smb.conf
+    marker: "; ANSIBLE MANAGED BLOCK - SHARED"
+    block: |
+      [shared]
+      path = /snand/shared
+      browseable = yes
+      writable = yes
+      guest ok = yes
+      force user = nobody
+      force create mode = 0777
+      force directory mode = 0777
+      delete readonly = yes
+
+- name: Configure SMB share for user directory
+  blockinfile:
+    path: /etc/samba/smb.conf
+    marker: "; ANSIBLE MANAGED BLOCK - USER"
+    block: |
+      [home]
+      path = /home/{{ ansible_user }}
+      browseable = yes
+      writable = yes
+      valid users = {{ ansible_user }}
+      create mode = 0750
+      directory mode = 0750
+
+- name: Set Samba password for {{ ansible_user }}
+  command: echo "{{ smb_password }}" | smbpasswd -s -a {{ ansible_user }}
+
+- name: Restart Samba service
+  systemd:
+    name: smbd
+    state: restarted
+    enabled: yes
