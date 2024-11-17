@@ -67,10 +67,3 @@
     regexp: '^\[(?!shared|{{ ansible_user }})\w+\]'
   notify:
     - Restart Samba
-
-handlers:
-  - name: Restart Samba
-    systemd:
-      name: smbd
-      state: restarted
-      enabled: yes
