@@ -10,10 +10,21 @@
     name:
       - docker.io
       - docker-compose
-      - lazydocker
       - samba
       - nfs-kernel-server
     state: present
+
+- name: Download and run LazyDocker install script
+  shell: |
+    curl -fsSL https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | DIR=/usr/local/bin bash
+  args:
+    creates: /usr/local/bin/lazydocker
+
+- name: Ensure LazyDocker binary is executable
+  file:
+    path: /usr/local/bin/lazydocker
+    mode: '0755'
+    state: file
 
 - name: Enable and start Docker service
   systemd:
