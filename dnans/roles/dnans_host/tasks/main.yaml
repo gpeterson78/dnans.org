@@ -10,23 +10,14 @@
     state: present
     update_cache: yes
 
-- name: Download and run LazyDocker install script
-  shell: |
-    curl -fsSL https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
-  args:
-    creates: "{{ ansible_env.HOME }}/.local/bin/lazydocker"
+- name: Add user to Docker group
+  user:
+    name: "{{ sudo_user }}"
+    groups: docker
+    append: yes
 
-- name: Ensure LazyDocker binary exists in /usr/local/bin
-  command: mv {{ ansible_env.HOME }}/.local/bin/lazydocker /usr/local/bin/lazydocker
-  args:
-    creates: /usr/local/bin/lazydocker
-  when: ansible_facts['os_family'] == 'Debian'
-
-- name: Ensure LazyDocker binary is executable
-  file:
-    path: /usr/local/bin/lazydocker
-    mode: '0755'
-    state: file
-
-- name: Verify LazyDocker installation
-  command: /usr/local/bin/lazydocker --version
+- name: Enable and start Docker service
+  systemd:
+    name: docker
+    enabled: yes
+    state: started
