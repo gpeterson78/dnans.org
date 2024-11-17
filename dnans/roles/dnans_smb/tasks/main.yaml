@@ -6,6 +6,14 @@
     state: present
     update_cache: yes
 
+- name: Ensure Samba user {{ ansible_user }} exists
+  shell: echo "{{ smb_password }}" | smbpasswd -s -a "{{ ansible_user }}"
+  ignore_errors: true  # Ignore if user already exists
+
+- name: Update Samba password for {{ ansible_user }}
+  shell: echo "{{ smb_password }}" | smbpasswd -s "{{ ansible_user }}"
+  when: ansible_user is defined
+
 - name: Ensure /snand/shared directory exists
   file:
     path: /snand/shared
@@ -32,7 +40,7 @@
       force user = nobody
       force create mode = 0777
       force directory mode = 0777
-      delete readonly = yes
+      delete readonly = yes 
 
 - name: Configure SMB share for user directory
   blockinfile:
@@ -46,9 +54,6 @@
       valid users = {{ ansible_user }}
       create mode = 0750
       directory mode = 0750
-
-- name: Set Samba password for {{ ansible_user }}
-  shell: echo "{{ smb_password }}" | smbpasswd -s -a "{{ ansible_user }}"
 
 - name: Restart Samba service
   systemd:
