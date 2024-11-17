@@ -31,7 +31,7 @@
       delete veto files = no
       read only = no
 
-      [%username%]
+      [{{ ansible_user }}]
       path = /home/{{ ansible_user }}
       browseable = yes
       writable = yes
@@ -45,8 +45,18 @@
   shell: |
     (echo "{{ smb_password }}"; echo "{{ smb_password }}") | smbpasswd -s -a "{{ ansible_user }}"
   ignore_errors: true
+  changed_when: false  # Prevents marking task as changed if ignored errors occur
 
 - name: Update Samba password for {{ ansible_user }}
   shell: |
     (echo "{{ smb_password }}"; echo "{{ smb_password }}") | smbpasswd -s "{{ ansible_user }}"
   when: ansible_user is defined
+  changed_when: false  # Avoids unnecessary "changed" status
+
+- name: Remove unnecessary shares from smb.conf
+  lineinfile:
+    path: /etc/samba/smb.conf
+    state: absent
+    regexp: '^\[(?!shared|{{ ansible_user }})\w+\]'  # Removes all shares except the specified ones
+  notify:
+    - Restart Samba

@@ -1,2 +1,3 @@
 hostname: "dnans"
 ansible_user: "gradyp"
+smb_password: "{{ vault_smb_password }}"
