@@ -7,11 +7,13 @@
     update_cache: yes
 
 - name: Ensure Samba user {{ ansible_user }} exists
-  shell: echo "{{ smb_password }}" | smbpasswd -s -a "{{ ansible_user }}"
-  ignore_errors: true  # Ignore if user already exists
+  shell: |
+    (echo "{{ smb_password }}"; echo "{{ smb_password }}") | smbpasswd -s -a "{{ ansible_user }}"
+  ignore_errors: true
 
 - name: Update Samba password for {{ ansible_user }}
-  shell: echo "{{ smb_password }}" | smbpasswd -s "{{ ansible_user }}"
+  shell: |
+    (echo "{{ smb_password }}"; echo "{{ smb_password }}") | smbpasswd -s "{{ ansible_user }}"
   when: ansible_user is defined
 
 - name: Ensure /snand/shared directory exists
