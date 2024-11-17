@@ -21,3 +21,22 @@
     name: docker
     enabled: yes
     state: started
+
+- name: Ensure /snand directory exists
+  file:
+    path: /snand
+    state: directory
+    mode: '0755'
+
+- name: Add UUID mount to /etc/fstab
+  mount:
+    path: /snand
+    src: "UUID=d13e0f82-9b0f-4049-90ac-06df6697e82a"
+    fstype: ext4  # Adjust if different (e.g., xfs, btrfs)
+    opts: defaults
+    state: present
+
+- name: Mount /snand
+  command: mount -a
+  args:
+    warn: false
