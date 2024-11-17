@@ -1,32 +1,9 @@
 # roles/dnans_host/tasks/main.yaml
 ---
-- name: Install sudo
-  apt:
-    name: sudo
-    state: present
-    update_cache: yes
-
-- name: Add user to sudoers group
-  user:
-    name: "{{ sudo_user }}"
-    groups: sudo
-    append: yes
-    state: present
 
 - name: Set hostname
   hostname:
     name: "{{ hostname }}"
-
-- name: Configure static IP address
-  copy:
-    dest: /etc/network/interfaces.d/eth0
-    content: |
-      auto eth0
-      iface eth0 inet static
-      address {{ static_ip }}
-      netmask 255.255.255.0
-      gateway 10.0.0.1
-  notify: Restart networking
 
 - name: Install required packages
   apt:
@@ -54,9 +31,3 @@
   reboot:
     msg: "Rebooting to apply hostname and IP changes"
     connect_timeout: 60
-
-handlers:
-  - name: Restart networking
-    service:
-      name: networking
-      state: restarted
