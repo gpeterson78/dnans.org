@@ -1,20 +1,27 @@
 # dnans.org Ansible Test Playground
 
-dnans serves as my Ansible learning and evaluation environment. I'm exploring Ansible as a potential replacement for my current scripting setup on [snand.org](https://snand.org). 
+dnans is [gradyp's](https://www.gradyp.com) dev environment. this is purely a place to learn and play.
 
-**Disclaimer**:  
-This repo is experimental and contains work-in-progress code. It's not intended for public use, but if you find anything here useful, feel free...
+currently this is my Ansible playground where I'm exploring potential replacements for [snand.org's](https://snand.org) script based setup.
+
+**disclaimer**:  
+this repo is experimental and contains work-in-progress code.  it's not intended for public use, but if you find anything here useful, feel free...
 
 ---
 
-## Current Focus
+## current focus
 
-- Setting up a basic Ansible project structure.
-- Automating server configurations, including:
-  - Installing essential packages (`sudo`, `docker`, `samba`, `nfs`).
-  - Managing system services.
-  - Setting up persistent mounts using UUIDs.
-- Incrementally learning best practices for roles, playbooks, and variable management.
+- ~~setting up a basic Ansible project structure.~~
+- automating server configurations, including:
+  - ~~installing essential packages (`sudo`, `docker`, `samba`, `nfs`).~~
+  - managing system services.
+  - setting up persistent mounts using UUIDs.
+  - configuring SMB shares
+- installing docker projects
+ - traefik
+ - cloudflare
+ - Wordpress
+ - immich
 
 ---
 
@@ -24,11 +31,4 @@ This repo is experimental and contains work-in-progress code. It's not intended 
 |-----------|---------------|----------------------------------|
 | `v0.0.1`  | Pre-release   | Initial setup, basic configurations. |
 | `v0.0.x`  | In Progress   | Iterative improvements and testing. |
-
----
-
-## Notes
-
-- Expect frequent changes as I experiment with different configurations and approaches.
-- Future milestones include creating reusable roles, integrating more advanced tasks, and documenting lessons learned.
 
