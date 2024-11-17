@@ -7,27 +7,29 @@
     update_cache: yes
 
 - name: Ensure Samba user {{ ansible_user }} exists
-  shell: |
-    (echo "{{ smb_password }}"; echo "{{ smb_password }}") | smbpasswd -s -a "{{ ansible_user }}"
+  command: "smbpasswd -s -a {{ ansible_user }}"
+  args:
+    stdin: "{{ smb_password }}"
+  register: smb_user_result
   ignore_errors: true
+  changed_when: "'User exists' not in smb_user_result.stderr"
 
 - name: Update Samba password for {{ ansible_user }}
-  shell: |
-    (echo "{{ smb_password }}"; echo "{{ smb_password }}") | smbpasswd -s "{{ ansible_user }}"
+  command: "smbpasswd -s {{ ansible_user }}"
+  args:
+    stdin: "{{ smb_password }}"
   when: ansible_user is defined
 
-- name: Ensure /snand/shared directory exists
-  file:
-    path: /snand/shared
-    state: directory
-    mode: '0777'
-
-- name: Ensure Samba configuration file is backed up
-  copy:
-    src: /etc/samba/smb.conf
-    dest: /etc/samba/smb.conf.bak
-    remote_src: yes
-    backup: yes
+- name: Configure global Samba settings
+  blockinfile:
+    path: /etc/samba/smb.conf
+    marker: "; ANSIBLE MANAGED BLOCK - GLOBAL"
+    block: |
+      [global]
+      workgroup = WORKGROUP
+      security = user
+      map to guest = Bad User
+      guest account = nobody
 
 - name: Configure SMB share for /snand/shared
   blockinfile:
@@ -59,8 +61,11 @@
       create mode = 0750
       directory mode = 0750
 
-- name: Restart Samba service
+- name: Restart Samba services
   systemd:
-    name: smbd
+    name: "{{ item }}"
     state: restarted
     enabled: yes
+  loop:
+    - smbd
+    - nmbd
