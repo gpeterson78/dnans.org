@@ -6,3 +6,6 @@ sudo apt update
     ssh-keygen -t rsa -b 4096
     ssh-copy-id gradyp@10.0.0.111
     ansible-vault create vault.yml
+    echo "REDACTED > ~/.ansible_vault_pass
+    chmod 600 ~/.ansible_vault_pass
+    
