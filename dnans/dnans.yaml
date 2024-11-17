@@ -11,6 +11,7 @@
     # Additional roles will be added as the project expands
     # - dnans_ingress
 
-- name: Debug ansible_become_pass
-  debug:
-    msg: "Become password is: {{ ansible_become_pass }}"
+  tasks:
+    - name: Debug ansible_become_pass
+      debug:
+        msg: "Become password is: {{ ansible_become_pass }}"
