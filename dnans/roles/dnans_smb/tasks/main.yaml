@@ -48,7 +48,7 @@
       directory mode = 0750
 
 - name: Set Samba password for {{ ansible_user }}
-  command: echo "{{ smb_password }}" | smbpasswd -s -a {{ ansible_user }}
+  shell: echo "{{ smb_password }}" | smbpasswd -s -a "{{ ansible_user }}"
 
 - name: Restart Samba service
   systemd:
