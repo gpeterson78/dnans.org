@@ -15,3 +15,7 @@
     - name: Debug ansible_become_pass
       debug:
         msg: "Become password is: {{ ansible_become_pass }}"
+
+    - name: Ping the server
+      ping:
+      become: no  # Disable sudo for this task
