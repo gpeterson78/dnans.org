@@ -12,7 +12,6 @@
     # - dnans_ingress
 - name: Ping servers
   hosts: all
-  become: no  # No sudo required for ping
   tasks:
     - name: Ping the server
       ping:
