@@ -1,9 +1,45 @@
----
-- name: Install Samba
-  apt:
-    name: samba
-    state: present
-    update_cache: yes
+- name: Backup original smb.conf
+  copy:
+    src: /etc/samba/smb.conf
+    dest: /etc/samba/smb.conf.bak
+    remote_src: yes
+    backup: yes
+
+- name: Ensure only specified shares exist in smb.conf
+  blockinfile:
+    path: /etc/samba/smb.conf
+    marker: "; ANSIBLE MANAGED BLOCK - SMB CONFIG"
+    block: |
+      [global]
+      workgroup = WORKGROUP
+      security = user
+      map to guest = Bad User
+      guest account = nobody
+
+      [shared]
+      path = /snand/shared
+      browseable = yes
+      writable = yes
+      guest ok = yes
+      public = yes
+      create mask = 0666
+      directory mask = 0777
+      force user = nobody
+      force group = nogroup
+      delete readonly = yes
+      veto files = /lost+found/
+      delete veto files = no
+      read only = no
+
+      [%username%]
+      path = /home/{{ ansible_user }}
+      browseable = yes
+      writable = yes
+      valid users = {{ ansible_user }}
+      create mode = 0750
+      directory mode = 0750
+  notify:
+    - Restart Samba
 
 - name: Ensure Samba user {{ ansible_user }} exists
   shell: |
@@ -14,52 +50,3 @@
   shell: |
     (echo "{{ smb_password }}"; echo "{{ smb_password }}") | smbpasswd -s "{{ ansible_user }}"
   when: ansible_user is defined
-
-
-- name: Configure global Samba settings
-  blockinfile:
-    path: /etc/samba/smb.conf
-    marker: "; ANSIBLE MANAGED BLOCK - GLOBAL"
-    block: |
-      [global]
-      workgroup = WORKGROUP
-      security = user
-      map to guest = Bad User
-      guest account = nobody
-
-- name: Configure SMB share for /snand/shared
-  blockinfile:
-    path: /etc/samba/smb.conf
-    marker: "; ANSIBLE MANAGED BLOCK - SHARED"
-    block: |
-      [shared]
-      path = /snand/shared
-      browseable = yes
-      writable = yes
-      guest ok = yes
-      public = yes
-      create mask = 0666  # Read and write for all
-      directory mask = 0777
-      force user = nobody
-      force group = nogroup
-      read only = no
-
-- name: Configure SMB share for user home directory
-  blockinfile:
-    path: /etc/samba/smb.conf
-    marker: "; ANSIBLE MANAGED BLOCK - USER"
-    block: |
-      [{{ ansible_user }}]
-      path = /home/{{ ansible_user }}
-      browseable = yes
-      writable = yes
-      valid users = {{ ansible_user }}
-      create mask = 0700
-      directory mask = 0700
-      read only = no
-
-- name: Restart Samba service
-  systemd:
-    name: smbd
-    state: restarted
-    enabled: yes
