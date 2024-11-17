@@ -32,11 +32,15 @@
   mount:
     path: /snand
     src: "UUID=d13e0f82-9b0f-4049-90ac-06df6697e82a"
-    fstype: ext4  # Adjust if different (e.g., xfs, btrfs)
+    fstype: ext4
     opts: defaults
     state: present
 
 - name: Mount /snand
-  command: mount -a
-  args:
-    warn: false
+  mount:
+    path: /snand
+    src: "UUID=d13e0f82-9b0f-4049-90ac-06df6697e82a"
+    fstype: ext4
+    opts: defaults
+    state: mounted
+
