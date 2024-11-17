@@ -1,4 +1,3 @@
-# roles/dnans_smb/tasks/main.yaml
 ---
 - name: Install Samba
   apt:
@@ -15,6 +14,7 @@
   shell: |
     (echo "{{ smb_password }}"; echo "{{ smb_password }}") | smbpasswd -s "{{ ansible_user }}"
   when: ansible_user is defined
+
 
 - name: Configure global Samba settings
   blockinfile:
@@ -38,30 +38,28 @@
       writable = yes
       guest ok = yes
       public = yes
-      create mask = 0777
+      create mask = 0666  # Read and write for all
       directory mask = 0777
       force user = nobody
       force group = nogroup
       read only = no
 
-- name: Configure SMB share for user directory
+- name: Configure SMB share for user home directory
   blockinfile:
     path: /etc/samba/smb.conf
     marker: "; ANSIBLE MANAGED BLOCK - USER"
     block: |
-      [home]
+      [{{ ansible_user }}]
       path = /home/{{ ansible_user }}
       browseable = yes
       writable = yes
       valid users = {{ ansible_user }}
-      create mode = 0750
-      directory mode = 0750
+      create mask = 0700
+      directory mask = 0700
+      read only = no
 
-- name: Restart Samba services
+- name: Restart Samba service
   systemd:
-    name: "{{ item }}"
+    name: smbd
     state: restarted
     enabled: yes
-  loop:
-    - smbd
-    - nmbd
