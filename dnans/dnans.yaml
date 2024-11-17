@@ -10,3 +10,9 @@
     - dnans_smb
     # Additional roles will be added as the project expands
     # - dnans_ingress
+- name: Ping servers
+  hosts: all
+  become: no  # No sudo required for ping
+  tasks:
+    - name: Ping the server
+      ping:
