@@ -3,6 +3,8 @@
 - name: Configure dnans server
   hosts: servers
   become: yes
+  vars_files:
+    - vault.yaml
   roles:
     - dnans_host          # Base server setup (Docker, LazyDocker, etc.)
     # Additional roles will be added as the project expands
