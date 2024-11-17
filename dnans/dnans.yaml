@@ -6,7 +6,7 @@
   vars_files:
     - vault.yaml
   roles:
-    - dnans_host          # Base server setup (Docker, LazyDocker, etc.)
+    - dnans_host
+    - dnans_smb
     # Additional roles will be added as the project expands
-    # - dnans_smb
     # - dnans_ingress
