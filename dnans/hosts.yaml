@@ -1,0 +1,9 @@
+# hosts.yaml
+all:
+  children:
+    servers:
+      hosts:
+        dnans:
+          ansible_host: dnans.dundermifflin
+          ansible_user: gradyp
+          ansible_become: true

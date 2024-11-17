@@ -1,0 +1,4 @@
+static_ip: "10.0.0.20"
+hostname: "dnans"
+sudo_user: "gradyp"
+
