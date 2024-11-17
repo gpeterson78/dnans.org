@@ -15,12 +15,6 @@
       - nfs-kernel-server
     state: present
 
-- name: Add user to Docker group
-  user:
-    name: "{{ sudo_user }}"
-    groups: docker
-    append: yes
-
 - name: Enable and start Docker service
   systemd:
     name: docker
