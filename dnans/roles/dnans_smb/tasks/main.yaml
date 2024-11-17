@@ -39,10 +39,12 @@
       browseable = yes
       writable = yes
       guest ok = yes
+      public = yes
+      create mask = 0777
+      directory mask = 0777
       force user = nobody
-      force create mode = 0777
-      force directory mode = 0777
-      delete readonly = yes 
+      force group = nogroup
+      read only = no
 
 - name: Configure SMB share for user directory
   blockinfile:
