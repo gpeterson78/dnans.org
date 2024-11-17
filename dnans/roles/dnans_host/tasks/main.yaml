@@ -20,11 +20,22 @@
   args:
     creates: /usr/local/bin/lazydocker
 
+- name: Verify LazyDocker installation
+  stat:
+    path: /usr/local/bin/lazydocker
+  register: lazydocker_binary
+
+- name: Fail if LazyDocker binary is missing
+  fail:
+    msg: "LazyDocker installation failed!"
+  when: not lazydocker_binary.stat.exists
+
 - name: Ensure LazyDocker binary is executable
   file:
     path: /usr/local/bin/lazydocker
     mode: '0755'
     state: file
+  when: lazydocker_binary.stat.exists
 
 - name: Enable and start Docker service
   systemd:
