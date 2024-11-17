@@ -26,10 +26,9 @@
       directory mask = 0777
       force user = nobody
       force group = nogroup
-      delete readonly = yes
+      read only = no
       veto files = /lost+found/
       delete veto files = no
-      read only = no
 
       [{{ ansible_user }}]
       path = /home/{{ ansible_user }}
@@ -41,22 +40,37 @@
   notify:
     - Restart Samba
 
+- name: Ensure permissions for /snand/shared
+  file:
+    path: /snand/shared
+    state: directory
+    mode: '0777'
+    owner: nobody
+    group: nogroup
+
 - name: Ensure Samba user {{ ansible_user }} exists
   shell: |
     (echo "{{ smb_password }}"; echo "{{ smb_password }}") | smbpasswd -s -a "{{ ansible_user }}"
   ignore_errors: true
-  changed_when: false  # Prevents marking task as changed if ignored errors occur
+  changed_when: false
 
 - name: Update Samba password for {{ ansible_user }}
   shell: |
     (echo "{{ smb_password }}"; echo "{{ smb_password }}") | smbpasswd -s "{{ ansible_user }}"
   when: ansible_user is defined
-  changed_when: false  # Avoids unnecessary "changed" status
+  changed_when: false
 
 - name: Remove unnecessary shares from smb.conf
   lineinfile:
     path: /etc/samba/smb.conf
     state: absent
-    regexp: '^\[(?!shared|{{ ansible_user }})\w+\]'  # Removes all shares except the specified ones
+    regexp: '^\[(?!shared|{{ ansible_user }})\w+\]'
   notify:
     - Restart Samba
+
+handlers:
+  - name: Restart Samba
+    systemd:
+      name: smbd
+      state: restarted
+      enabled: yes
