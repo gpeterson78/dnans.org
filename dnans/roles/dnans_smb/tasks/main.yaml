@@ -1,14 +1,26 @@
-- name: Backup original smb.conf
-  copy:
-    src: /etc/samba/smb.conf
-    dest: /etc/samba/smb.conf.bak
-    remote_src: yes
-    backup: yes
+---
+- name: Install Samba
+  apt:
+    name: samba
+    state: present
+    update_cache: yes
 
-- name: Ensure only specified shares exist in smb.conf
+- name: Ensure Samba user {{ ansible_user }} exists
+  command: smbpasswd -s -a "{{ ansible_user }}"
+  args:
+    stdin: "{{ smb_password }}"
+  ignore_errors: true
+
+- name: Update Samba password for {{ ansible_user }}
+  command: smbpasswd -s "{{ ansible_user }}"
+  args:
+    stdin: "{{ smb_password }}"
+  when: ansible_user is defined
+
+- name: Configure global Samba settings
   blockinfile:
     path: /etc/samba/smb.conf
-    marker: "; ANSIBLE MANAGED BLOCK - SMB CONFIG"
+    marker: "; ANSIBLE MANAGED BLOCK - GLOBAL"
     block: |
       [global]
       workgroup = WORKGROUP
@@ -16,54 +28,39 @@
       map to guest = Bad User
       guest account = nobody
 
+- name: Configure SMB share for /snand/shared
+  blockinfile:
+    path: /etc/samba/smb.conf
+    marker: "; ANSIBLE MANAGED BLOCK - SHARED"
+    block: |
       [shared]
       path = /snand/shared
       browseable = yes
       writable = yes
       guest ok = yes
       public = yes
-      create mask = 0666
+      create mask = 0666  # Read and write for all
       directory mask = 0777
       force user = nobody
       force group = nogroup
       read only = no
-      veto files = /lost+found/
-      delete veto files = no
 
+- name: Configure SMB share for user home directory
+  blockinfile:
+    path: /etc/samba/smb.conf
+    marker: "; ANSIBLE MANAGED BLOCK - USER"
+    block: |
       [{{ ansible_user }}]
       path = /home/{{ ansible_user }}
       browseable = yes
       writable = yes
       valid users = {{ ansible_user }}
-      create mode = 0750
-      directory mode = 0750
-  notify:
-    - Restart Samba
+      create mask = 0700
+      directory mask = 0700
+      read only = no
 
-- name: Ensure permissions for /snand/shared
-  file:
-    path: /snand/shared
-    state: directory
-    mode: '0777'
-    owner: nobody
-    group: nogroup
-
-- name: Ensure Samba user {{ ansible_user }} exists
-  shell: |
-    (echo "{{ smb_password }}"; echo "{{ smb_password }}") | smbpasswd -s -a "{{ ansible_user }}"
-  ignore_errors: true
-  changed_when: false
-
-- name: Update Samba password for {{ ansible_user }}
-  shell: |
-    (echo "{{ smb_password }}"; echo "{{ smb_password }}") | smbpasswd -s "{{ ansible_user }}"
-  when: ansible_user is defined
-  changed_when: false
-
-- name: Remove unnecessary shares from smb.conf
-  lineinfile:
-    path: /etc/samba/smb.conf
-    state: absent
-    regexp: '^\[(?!shared|{{ ansible_user }})\w+\]'
-  notify:
-    - Restart Samba
+- name: Restart Samba service
+  systemd:
+    name: smbd
+    state: restarted
+    enabled: yes
