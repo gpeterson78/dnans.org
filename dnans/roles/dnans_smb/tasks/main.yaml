@@ -6,16 +6,16 @@
     update_cache: yes
 
 - name: Ensure Samba user {{ ansible_user }} exists
-  command: smbpasswd -s -a "{{ ansible_user }}"
-  args:
-    stdin: "{{ smb_password }}"
+  shell: |
+    (echo "{{ smb_password }}"; echo "{{ smb_password }}") | smbpasswd -s -a "{{ ansible_user }}"
   ignore_errors: true
+  changed_when: false
 
 - name: Update Samba password for {{ ansible_user }}
-  command: smbpasswd -s "{{ ansible_user }}"
-  args:
-    stdin: "{{ smb_password }}"
+  shell: |
+    (echo "{{ smb_password }}"; echo "{{ smb_password }}") | smbpasswd -s "{{ ansible_user }}"
   when: ansible_user is defined
+
 
 - name: Configure global Samba settings
   blockinfile:
