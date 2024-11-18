@@ -1,4 +1,3 @@
-# roles/dnans_host/tasks/main.yaml
 ---
 - name: Install required packages
   apt:
@@ -22,25 +21,24 @@
     enabled: yes
     state: started
 
-- name: Ensure /snand directory exists
+- name: Ensure project directory exists
   file:
-    path: /snand
+    path: "{{ project_path }}"
     state: directory
     mode: '0755'
 
 - name: Add UUID mount to /etc/fstab
   mount:
-    path: /snand
-    src: "UUID=d13e0f82-9b0f-4049-90ac-06df6697e82a"
+    path: "{{ project_path }}"
+    src: "UUID={{ mount_uuid }}"
     fstype: ext4
     opts: defaults
     state: present
 
-- name: Mount /snand
+- name: Mount project directory
   mount:
-    path: /snand
-    src: "UUID=d13e0f82-9b0f-4049-90ac-06df6697e82a"
+    path: "{{ project_path }}"
+    src: "UUID={{ mount_uuid }}"
     fstype: ext4
     opts: defaults
     state: mounted
-

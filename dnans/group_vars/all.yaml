@@ -1,3 +1,5 @@
 hostname: "dnans"
 ansible_user: "gradyp"
 smb_password: "{{ vault_smb_password }}"
+project_path: "/dnans"
+mount_uuid: "d13e0f82-9b0f-4049-90ac-06df6697e82a" #optional
