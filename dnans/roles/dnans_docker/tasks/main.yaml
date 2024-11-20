@@ -20,7 +20,7 @@
 
 - name: Ensure Traefik data directories exist
   file:
-    path: "{{ project_path }}/docker/traefik/{{ item }}"
+    path: "{{ docker_projects_path }}/traefik/traefik/{{ item }}"
     state: directory
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
@@ -30,14 +30,14 @@
 
 - name: Generate .env file for Traefik
   template:
-    src: docker/traefik/.env.j2
+    src: .env.j2
     dest: "{{ docker_projects_path }}/traefik/.env"
     mode: '0640'
 
 - name: Copy Traefik Docker Compose file
   copy:
     src: docker-compose.yaml
-    dest: "{{ project_path }}/docker/traefik/docker-compose.yaml"
+    dest: "{{ docker_projects_path }}/traefik/docker-compose.yaml"
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
     mode: '0644'
