@@ -28,7 +28,7 @@ services:
       - "8080:8080"  # Optional dashboard
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - {{ docker_projects_path }}/traefik/letsencrypt:letsencrypt
+      - ./letsencrypt:/letsencrypt
     networks:
       - dnans_network
 
