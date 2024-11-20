@@ -11,7 +11,7 @@ services:
       - "--entrypoints.websecure.http.tls=true"
       - "--log.level=${TRAEFIK_LOG_LEVEL}"
       - "--api.dashboard=true"
-      - "--api.insecure=false"  # Disable insecure dashboard in production
+      - "--api.insecure=true"  # Disable insecure dashboard in production
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
