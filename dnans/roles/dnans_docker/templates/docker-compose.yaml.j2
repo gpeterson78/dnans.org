@@ -30,8 +30,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./letsencrypt:/letsencrypt
     networks:
-      - dnans_network
+      - {{ docker_network_name }}
 
 networks:
-  dnans_network:
+  {{ docker_network_name }}:
     external: true

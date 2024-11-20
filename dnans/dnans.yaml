@@ -9,3 +9,4 @@
     - dnans_host
     - dnans_smb
     - dnans_docker
+    - dnans_wordpress
