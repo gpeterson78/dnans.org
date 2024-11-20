@@ -44,10 +44,10 @@
 
 - name: Launch traefik with Docker Compose
   community.docker.docker_compose:
-    project_src: "{{ project_path }}/docker/traefik"
+    project_src: "{{ docker_projects_path }}/traefik"
     state: present
     pull: yes
-    recreate: yes
+    recreate: smart  # Use 'always', 'never', or 'smart'
     remove_orphans: yes
   notify:
     - Restart Docker services
