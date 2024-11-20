@@ -18,7 +18,7 @@
     driver: bridge
     state: present
 
-- name: Ensure Traefik data directories exist
+- name: Ensure traefik data directories exist
   file:
     path: "{{ docker_projects_path }}/traefik/traefik/{{ item }}"
     state: directory
@@ -26,15 +26,15 @@
     group: "{{ ansible_user }}"
     mode: '0755'
   with_items:
-    - data  # For storing Traefik's dynamic config or certificates
+    - data  # For storing traefik's dynamic config or certificates
 
-- name: Generate .env file for Traefik
+- name: Generate .env file for traefik
   template:
     src: .env.j2
     dest: "{{ docker_projects_path }}/traefik/.env"
     mode: '0640'
 
-- name: Copy Traefik Docker Compose file
+- name: Generate docker-compose.yaml for traefik
   template:
     src: docker-compose.yaml.j2
     dest: "{{ docker_projects_path }}/traefik/docker-compose.yaml"
@@ -42,7 +42,7 @@
     group: "{{ ansible_user }}"
     mode: '0644'
 
-- name: Launch Traefik with Docker Compose
+- name: Launch traefik with Docker Compose
   community.docker.docker_compose:
     project_src: "{{ project_path }}/docker/traefik"
     state: present
