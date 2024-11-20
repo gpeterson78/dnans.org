@@ -1,5 +1,26 @@
+# group_vars/all.yaml
+
+# host configuration
 hostname: "dnans"
 ansible_user: "gradyp"
-smb_password: "{{ vault_smb_password }}"
 project_path: "/dnans"
+
+# UUID for Mount (Optional)
 mount_uuid: "d13e0f82-9b0f-4049-90ac-06df6697e82a" #optional
+
+# SMB Configuration
+smb_shared_path: "{{ project_path }}/shared"  # Path for shared directory
+
+# Scripts Path
+scripts_path: "{{ project_path }}/scripts"  # Path for custom scripts (if any)
+
+# Docker Configuration
+docker_projects_path: "{{ project_path }}/docker"  # Path for all Docker Compose projects
+docker_network_name: dnans_network  # Bridge network name
+
+# Cloudflare Configuration
+cloudflare_email: grady@gradyp.com
+
+# Let's Encrypt Configuration
+letsencrypt_email: gradyp@snand.org
+letsencrypt_path: "{{ project_path }}/letsencrypt"  # Mounted path for certificates
