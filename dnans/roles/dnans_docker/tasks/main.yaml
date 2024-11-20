@@ -12,6 +12,15 @@
     state: started
     enabled: yes
 
+- name: Create Docker bridge network
+  community.docker.docker_network:
+    name: "{{ docker_network_name }}"
+    driver: bridge
+    ipam_config:
+      - subnet: 192.168.1.0/24  # Example subnet, adjust based on your network
+    internal: no  # Ensures the network is accessible externally
+    state: present
+
 - name: Ensure traefik data directories exist
   file:
     path: "{{ docker_projects_path }}/traefik/traefik/{{ item }}"
