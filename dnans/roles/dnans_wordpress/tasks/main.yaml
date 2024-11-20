@@ -1,0 +1,51 @@
+# roles/dnans_wordpress/tasks/main.yaml
+
+- name: Ensure WordPress Docker Compose directory exists
+  file:
+    path: "{{ docker_projects_path }}/wordpress"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Check if .env file exists
+  stat:
+    path: "{{ docker_projects_path }}/wordpress/.env"
+  register: env_file_check
+
+- name: Generate or load WordPress DB passwords
+  set_fact:
+    wordpress_db_password: "{{ vault_wp_db_password | default(lookup('password', '/dev/null length=16 chars=ascii_letters,digits')) }}"
+    wordpress_db_root_password: "{{ vault_wp_db_root_password | default(lookup('password', '/dev/null length=31 chars=ascii_letters,digits')) }}"
+  when: not env_file_check.stat.exists
+
+- name: Generate .env file for WordPress
+  template:
+    src: .env.j2
+    dest: "{{ docker_projects_path }}/wordpress/.env"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'
+  when: not env_file_check.stat.exists
+
+- name: Debug password (optional)
+  debug:
+    msg:
+      - "WordPress DB Password: {{ wordpress_db_password }}"
+      - "WordPress DB Root Password: {{ wordpress_db_root_password }}"
+
+- name: Generate WordPress Docker Compose file
+  template:
+    src: docker-compose.yaml.j2
+    dest: "{{ docker_projects_path }}/wordpress/docker-compose.yaml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'
+
+- name: Launch WordPress with Docker Compose
+  community.docker.docker_compose:
+    project_src: "{{ docker_projects_path }}/wordpress"
+    state: present
+    pull: yes
+    recreate: smart
+    remove_orphans: yes

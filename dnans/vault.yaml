@@ -1,0 +1,5 @@
+ansible_become_pass:
+smb_password:
+cloudflare_dns_api_token:
+wordpress_db_password:
+wordpress_db_root_password:

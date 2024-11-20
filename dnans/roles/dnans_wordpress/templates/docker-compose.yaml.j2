@@ -1,0 +1,57 @@
+version: '3.9'
+
+networks:
+  traefik-network:
+    external: true
+
+services:
+  wordpress:
+    image: wordpress
+    container_name: wordpress
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.wordpress.entrypoints=websecure
+      - traefik.http.routers.wordpress.tls=true
+      - traefik.http.routers.wordpress.tls.certresolver=letsencrypt
+      - traefik.http.routers.wordpress.rule=Host(`{{ wordpress_url }}`)
+    environment:
+      WORDPRESS_DB_HOST: wordpressdb:3306
+      WORDPRESS_DB_USER: {{ wordpress_db_user }}
+      WORDPRESS_DB_PASSWORD: {{ wordpress_db_password }}
+      WORDPRESS_DB_NAME: wordpress
+    networks:
+      - traefik-network  
+    volumes:
+      - {{ wordpress_data_path }}:/var/www/html
+
+  wordpressdb:
+    image: mariadb
+    container_name: wordpressdb
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: {{ wordpress_db_user }}
+      MYSQL_PASSWORD: {{ wordpress_db_password }}
+      MYSQL_ROOT_PASSWORD: {{ wordpress_db_root_password }}
+    networks:
+      - traefik-network     
+    volumes:
+      - {{ wordpress_db_path }}:/var/lib/mysql
+
+  pma: 
+    image: phpmyadmin
+    container_name: wordpressphp
+    restart: always
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.wordpressphp.tls=true
+      - traefik.http.routers.wordpressphp.tls.certresolver=letsencrypt
+      - traefik.http.routers.wordpressphp.entrypoints=websecure
+      - traefik.http.routers.wordpressphp.rule=Host(`{{ phpmyadmin_url }}`)
+    networks:
+      - traefik-network 
+    environment:
+      - PMA_ARBITRARY=0 
+      - PMA_HOST=wordpressdb
+      - PMA_PORT=3306

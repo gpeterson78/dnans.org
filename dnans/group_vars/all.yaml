@@ -23,3 +23,10 @@ cloudflare_email: grady@gradyp.com
 
 # Let's Encrypt Configuration
 letsencrypt_email: gradyp@snand.org
+
+# WordPress Configuration
+wordpress_url: wordpress.dnans.org
+phpmyadmin_url: phpmyadmin.dnans.org
+wordpress_db_user: wp_user
+wordpress_data_path: "{{ docker_projects_path }}/wordpress/data"
+wordpress_db_path: "{{ docker_projects_path }}/wordpress/db"
