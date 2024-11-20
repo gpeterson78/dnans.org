@@ -16,6 +16,13 @@
   community.docker.docker_network:
     name: "{{ docker_network_name }}"
     driver: bridge
+    driver_options:
+      com.docker.network.bridge.enable_icc: "true"  # Allow containers to communicate
+      com.docker.network.bridge.enable_ip_masquerade: "true"  # Enable NAT for outbound traffic
+    ipam_options:
+      driver: default
+      config:
+        - subnet: "10.0.0.0/24"  # Replace with a suitable subnet for your environment
     state: present
 
 - name: Ensure traefik data directories exist
