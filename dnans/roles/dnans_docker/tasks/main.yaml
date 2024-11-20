@@ -1,4 +1,3 @@
-# roles/dnans_docker/tasks/main.yaml
 ---
 - name: Ensure Docker is installed
   apt:
@@ -16,17 +15,9 @@
 
 - name: Create Docker bridge network
   community.docker.docker_network:
-    name: dnans_network
+    name: "{{ docker_network_name }}"
     driver: bridge
     state: present
-
-- name: Copy Traefik Docker Compose file
-  copy:
-    src: docker-compose.yaml
-    dest: "{{ project_path }}/docker/traefik/docker-compose.yaml"
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
-    mode: '0644'
 
 - name: Ensure Traefik data directories exist
   file:
@@ -37,6 +28,20 @@
     mode: '0755'
   with_items:
     - data  # For storing Traefik's dynamic config or certificates
+
+- name: Generate .env file for Traefik
+  template:
+    src: docker/traefik/.env.j2
+    dest: "{{ docker_projects_path }}/traefik/.env"
+    mode: '0640'
+
+- name: Copy Traefik Docker Compose file
+  copy:
+    src: docker-compose.yaml
+    dest: "{{ project_path }}/docker/traefik/docker-compose.yaml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'
 
 - name: Launch Traefik with Docker Compose
   community.docker.docker_compose:

@@ -23,4 +23,3 @@ cloudflare_email: grady@gradyp.com
 
 # Let's Encrypt Configuration
 letsencrypt_email: gradyp@snand.org
-letsencrypt_path: "{{ project_path }}/letsencrypt"  # Mounted path for certificates

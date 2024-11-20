@@ -8,5 +8,4 @@
   roles:
     - dnans_host
     - dnans_smb
-    # Additional roles will be added as the project expands
-    # - dnans_ingress
+    - dnans_docker
