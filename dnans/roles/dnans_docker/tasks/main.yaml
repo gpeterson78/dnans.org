@@ -32,7 +32,7 @@
   template:
     src: .env.j2
     dest: "{{ docker_projects_path }}/traefik/.env"
-    mode: '0640'
+    mode: '0644'
 
 - name: Generate docker-compose.yaml for traefik
   template:
