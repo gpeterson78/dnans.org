@@ -12,17 +12,6 @@
     state: started
     enabled: yes
 
-- name: Create Docker bridge network
-  community.docker.docker_network:
-    name: "{{ docker_network_name }}"
-    driver: bridge
-    driver_options:
-      com.docker.network.bridge.enable_icc: "true"  # Allow inter-container communication
-      com.docker.network.bridge.enable_ip_masquerade: "true"  # Enable NAT
-    ipam_config:
-      - subnet: "10.0.0.0/24"  # Adjust to fit your network environment
-    state: present
-
 - name: Ensure traefik data directories exist
   file:
     path: "{{ docker_projects_path }}/traefik/traefik/{{ item }}"
