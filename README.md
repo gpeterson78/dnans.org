@@ -18,7 +18,7 @@ this repo is experimental and contains work-in-progress code.  it's not intended
   - setting up persistent mounts using UUIDs.
   - configuring SMB shares
 - installing docker projects
- - traefik
+- ~~traefik~~
  - cloudflare
  - Wordpress
  - immich
@@ -29,6 +29,7 @@ this repo is experimental and contains work-in-progress code.  it's not intended
 
 | Version   | Status        | Description                      |
 |-----------|---------------|----------------------------------|
-| `v0.0.1`  | Pre-release   | Initial setup, basic configurations. |
-| `v0.0.x`  | In Progress   | Iterative improvements and testing. |
+| `v0.0.2`  | wip | Docker, traefik and wordpress working. |
+| `v0.0.1`  | wip | Initial setup, basic configurations. |
+| `v0.0.x`  | begin progress | Iterative improvements and testing. |
 
