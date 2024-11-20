@@ -30,3 +30,6 @@ phpmyadmin_url: phpmyadmin.dnans.org
 wordpress_db_user: wp_user
 wordpress_data_path: "{{ docker_projects_path }}/wordpress/data"
 wordpress_db_path: "{{ docker_projects_path }}/wordpress/db"
+
+# immich configuration
+immich_url: immich.dnans.org

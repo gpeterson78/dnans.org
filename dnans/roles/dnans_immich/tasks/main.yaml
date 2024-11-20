@@ -1,0 +1,51 @@
+# roles/dnans_immich/tasks/main.yaml
+
+- name: Ensure immich Docker Compose directory exists
+  file:
+    path: "{{ docker_projects_path }}/immich"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Check if .env file exists
+  stat:
+    path: "{{ docker_projects_path }}/immich/.env"
+  register: env_file_check
+
+#- name: Generate or load immich DB passwords
+#  set_fact:
+#    immich_db_password: "{{ vault_wp_db_password | default(lookup('password', '/dev/null length=16 chars=ascii_letters,digits')) }}"
+#    immich_db_root_password: "{{ vault_wp_db_root_password | default(lookup('password', '/dev/null length=31 chars=ascii_letters,digits')) }}"
+#  when: not env_file_check.stat.exists
+
+- name: Generate .env file for immich
+  template:
+    src: .env.j2
+    dest: "{{ docker_projects_path }}/immich/.env"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'
+  when: not env_file_check.stat.exists
+
+#- name: Debug password (optional)
+#  debug:
+#    msg:
+#      - "immich DB Password: {{ immich_db_password }}"
+#      - "immich DB Root Password: {{ immich_db_root_password }}"
+
+- name: Generate immich Docker Compose file
+  template:
+    src: docker-compose.yaml.j2
+    dest: "{{ docker_projects_path }}/immich/docker-compose.yaml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'
+
+- name: Launch immich with Docker Compose
+  community.docker.docker_compose:
+    project_src: "{{ docker_projects_path }}/immich"
+    state: present
+    pull: yes
+    recreate: smart
+    remove_orphans: yes
