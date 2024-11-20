@@ -35,7 +35,7 @@
     mode: '0640'
 
 - name: Copy Traefik Docker Compose file
-  copy:
+  template:
     src: docker-compose.yaml.j2
     dest: "{{ docker_projects_path }}/traefik/docker-compose.yaml"
     owner: "{{ ansible_user }}"
