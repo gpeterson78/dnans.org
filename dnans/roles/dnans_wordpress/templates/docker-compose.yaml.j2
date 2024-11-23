@@ -11,8 +11,8 @@ services:
       - traefik.http.routers.wordpress.rule=Host(`{{ wordpress_url }}`)
     environment:
       WORDPRESS_DB_HOST: wordpressdb:3306
-      WORDPRESS_DB_USER: {{ wordpress_db_user }}
-      WORDPRESS_DB_PASSWORD: {{ wordpress_db_password }}
+      WORDPRESS_DB_USER: {{ wordpress_database_user }}
+      WORDPRESS_DB_PASSWORD: {{ wordpress_database_password }}
       WORDPRESS_DB_NAME: wordpress
     networks:
       - {{ docker_network_name }} 
@@ -25,9 +25,9 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: wordpress
-      MYSQL_USER: {{ wordpress_db_user }}
-      MYSQL_PASSWORD: {{ wordpress_db_password }}
-      MYSQL_ROOT_PASSWORD: {{ wordpress_db_root_password }}
+      MYSQL_USER: {{ wordpress_database_user }}
+      MYSQL_PASSWORD: {{ wordpress_database_password }}
+      MYSQL_ROOT_PASSWORD: {{ wordpress_database_root_password }}
     networks:
       - {{ docker_network_name }}     
     volumes:
