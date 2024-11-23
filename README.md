@@ -23,6 +23,12 @@ this repo is experimental and contains work-in-progress code.  it's not intended
  - Wordpress
  - immich
 
+
+## future enhancements
+
+- versioning for .env and compose files
+  - .env skipped if it exists, need logic for checking version or something in case of future change
+
 ---
 
 ## Versioning

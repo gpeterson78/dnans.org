@@ -20,6 +20,18 @@
       - "WordPress DB Password: {{ wp_db_password }}"
       - "WordPress DB Root Password: {{ wp_db_root_password }}"
 
+- name: Check if .env file exists
+  stat:
+    path: "{{ wordpress_project_path }}/.env"
+  register: env_file_stat
+
+- name: Generate or update .env file
+  template:
+    src: .env.j2
+    dest: "{{ wordpress_project_path }}/.env"
+    mode: '0644'
+  when: not env_file_stat.stat.exists or overwrite_env
+
 - name: Generate WordPress Docker Compose file
   template:
     src: docker-compose.yaml.j2
