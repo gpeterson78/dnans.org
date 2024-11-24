@@ -23,6 +23,8 @@
   │              └── Deploy Immich
   └── Service Deployment
        └── Start all Docker Compose projects
-       
+
+
+
 
 ---

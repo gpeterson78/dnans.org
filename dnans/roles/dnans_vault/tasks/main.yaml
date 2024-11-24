@@ -1,0 +1,63 @@
+---
+- name: Load default vault values
+  template:
+    src: vault.default.yaml
+    dest: /tmp/vault.default.yaml
+  register: default_vault_temp
+
+- name: Parse vault.default.yaml content
+  slurp:
+    src: /tmp/vault.default.yaml
+  register: default_vault_content
+
+- name: Parse vault.default.yaml content
+  set_fact:
+    default_vault: "{{ default_vault_content['content'] | b64decode | from_yaml }}"
+
+- name: Check if vault.yaml exists
+  stat:
+    path: vault.yaml
+  register: vault_file
+
+- name: Load existing vault.yaml if it exists
+  slurp:
+    src: vault.yaml
+  register: existing_vault_content
+  when: vault_file.stat.exists
+
+- name: Parse vault.yaml content if it exists
+  set_fact:
+    existing_vault: "{{ existing_vault_content['content'] | b64decode | from_yaml }}"
+  when: vault_file.stat.exists and existing_vault_content.content != ''
+
+- name: Initialize empty vault if missing
+  set_fact:
+    existing_vault: {}
+  when: existing_vault is not defined
+
+- name: Merge existing vault with default and generate sensitive values
+  set_fact:
+    updated_vault: >-
+      {{
+        default_vault | combine(existing_vault, recursive=True) | combine({
+          'immich_database_password': (existing_vault.immich_database_password | default(lookup('password', '/dev/null length=31 chars=ascii_letters,digits'))),
+          'immich_database_root_password': (existing_vault.immich_database_root_password | default(lookup('password', '/dev/null length=31 chars=ascii_letters,digits'))),
+          'wordpress_db_password': (existing_vault.wordpress_db_password | default(lookup('password', '/dev/null length=16 chars=ascii_letters,digits'))),
+          'wordpress_db_root_password': (existing_vault.wordpress_db_root_password | default(lookup('password', '/dev/null length=31 chars=ascii_letters,digits')))
+        })
+      }}
+
+- name: Save updated vault.yaml
+  copy:
+    content: "{{ updated_vault | to_nice_yaml }}"
+    dest: vault.yaml
+    owner: root
+    group: root
+    mode: '0600'
+  no_log: true
+
+- name: Encrypt vault.yaml
+  command: "ansible-vault encrypt vault.yaml"
+  args:
+    creates: vault.yaml
+  when: vault_file.stat.exists == false or updated_vault != existing_vault

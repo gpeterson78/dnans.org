@@ -1,0 +1,17 @@
+---
+- name: Configure dnans server
+  hosts: localhost
+  gather_facts: true
+  pre_tasks:
+    - name: Set default project_path if not defined
+      set_fact:
+        project_path: "{{ project_path | default(ansible_env.HOME ~ '/snand', true) }}"
+
+  vars_files:
+    - group_vars/all.yaml  # Ensure this is populated before roles
+
+  roles:
+    - dnans_host
+    - dnans_smb
+    - dnans_docker
+    - dnans_wordpress
