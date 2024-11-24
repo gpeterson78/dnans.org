@@ -6,18 +6,7 @@
     dest: /tmp/vault.default.yaml
   check_mode: no  # Always generate the temporary file
 
-# Step 2: Verify the template file exists
-- name: Check if /tmp/vault.default.yaml exists
-  stat:
-    path: /tmp/vault.default.yaml
-  register: vault_temp_file
-
-- name: Fail if /tmp/vault.default.yaml was not created
-  fail:
-    msg: "The vault.default.yaml was not created in /tmp."
-  when: not vault_temp_file.stat.exists
-
-# Step 3: Parse the default vault values
+# Step 2: Parse the default vault values
 - name: Parse default vault values
   slurp:
     src: /tmp/vault.default.yaml
@@ -27,38 +16,54 @@
   set_fact:
     default_vault: "{{ default_vault_content['content'] | b64decode | from_yaml }}"
 
-# Step 4: Check if vault.yaml exists
+# Step 3: Check if vault.yaml exists
 - name: Check if vault.yaml exists
   stat:
     path: "{{ playbook_dir }}/vault.yaml"
   register: vault_file
+
+# Step 4: Verify if the existing vault.yaml is encrypted
+- name: Check if vault.yaml is encrypted
+  command: "ansible-vault is_encrypted {{ playbook_dir }}/vault.yaml"
+  register: vault_encryption_status
   ignore_errors: true
+  when: vault_file.stat.exists
 
-# Ensure the vault_file variable is always defined
-- name: Ensure vault_file variable is defined
-  set_fact:
-    vault_file: { "stat": { "exists": false } }
-  when: vault_file is not defined
-
-# Step 5: Decrypt and load existing vault.yaml if it exists
-- name: Load existing vault.yaml if it exists
+# Step 5: Load existing vault.yaml if it is encrypted
+- name: Decrypt and load existing vault.yaml
   command: "ansible-vault view {{ playbook_dir }}/vault.yaml"
   register: existing_vault_raw
-  failed_when: existing_vault_raw.rc != 0
-  when: vault_file.stat.exists
+  when: vault_file.stat.exists and vault_encryption_status.rc == 0
 
 - name: Parse decrypted vault.yaml content
   set_fact:
     existing_vault: "{{ existing_vault_raw.stdout | from_yaml }}"
-  when: vault_file.stat.exists
+  when: vault_file.stat.exists and vault_encryption_status.rc == 0
 
-# Step 6: Initialize an empty vault if it doesn't exist
+# Step 6: Handle unencrypted vault.yaml
+- name: Load unencrypted vault.yaml content
+  slurp:
+    src: "{{ playbook_dir }}/vault.yaml"
+  register: unencrypted_vault_raw
+  when: vault_file.stat.exists and vault_encryption_status.rc != 0
+
+- name: Parse unencrypted vault.yaml content
+  set_fact:
+    existing_vault: "{{ unencrypted_vault_raw['content'] | b64decode | from_yaml }}"
+  when: vault_file.stat.exists and vault_encryption_status.rc != 0
+
+# Step 7: Encrypt vault.yaml if it was unencrypted
+- name: Encrypt unencrypted vault.yaml
+  command: "ansible-vault encrypt {{ playbook_dir }}/vault.yaml"
+  when: vault_file.stat.exists and vault_encryption_status.rc != 0
+
+# Step 8: Initialize an empty vault if missing
 - name: Initialize empty vault if missing
   set_fact:
     existing_vault: {}
   when: existing_vault is not defined
 
-# Step 7: Merge default and existing vault, generate missing sensitive values
+# Step 9: Merge default and existing vault, generate missing sensitive values
 - name: Merge vaults and generate missing sensitive values
   set_fact:
     updated_vault: >-
@@ -71,7 +76,7 @@
         })
       }}
 
-# Step 8: Save the updated vault.yaml
+# Step 10: Save the updated vault.yaml
 - name: Save updated vault.yaml
   copy:
     content: "{{ updated_vault | to_nice_yaml }}"
@@ -82,7 +87,7 @@
   no_log: true
   when: not ansible_check_mode
 
-# Step 9: Encrypt the vault.yaml file
-- name: Encrypt vault.yaml
+# Step 11: Encrypt vault.yaml if it was newly created
+- name: Encrypt newly created vault.yaml
   command: "ansible-vault encrypt {{ playbook_dir }}/vault.yaml"
-  when: not ansible_check_mode and (vault_file.stat.exists == false or existing_vault_raw.stdout != updated_vault | to_nice_yaml)
+  when: not ansible_check_mode and (vault_file.stat.exists == false)
