@@ -58,8 +58,6 @@
   copy:
     content: "{{ new_vault_content | to_nice_yaml }}"
     dest: "/tmp/vault.yaml"
-    owner: root
-    group: root
     mode: '0600'
   when: not vault_file.stat.exists
 
