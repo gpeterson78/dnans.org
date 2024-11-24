@@ -3,7 +3,7 @@
 # host configuration
 hostname: "dnans"
 ansible_user: "gradyp"
-project_path: "/dnans"
+project_path: "/dnans" # main project installation folder
 
 # UUID for Mount (Optional)
 mount_uuid: "d13e0f82-9b0f-4049-90ac-06df6697e82a" #optional
@@ -34,6 +34,8 @@ wordpress_db_path: "{{ docker_projects_path }}/wordpress/db"
 # immich configuration
 immich_env_name: immich
 immich_url: immich.dnans.org
-# immich_version:
-immich_database_name: immich
-immich_database_user: immich
+# immich_version: 
+# immich_database_name: 
+# immich_database_user: 
+# immich_database_password: 
+# immich_server_path:
