@@ -12,6 +12,8 @@ wordpress_db_password: ""  # Password for the WordPress database user.
 wordpress_db_root_password: ""  # Root password for the WordPress database.
 
 # Cloudflare API Token
-cloudflare_api_token: ""  # API token for Cloudflare.
+cloudflare_api_token: "eyJhIjoiYTBmNjJiYzk1NGI5YjljODRlZWM0NzI2NzQyMTUzZDgiLCJ0IjoiMjRjZTAxN2ItOWU0NC00MWE2LWE0YWQtMzljNmM1ZDI4ODFlIiwicyI6Ik1URTNZalkzTjJNdE1qRTNNQzAwWVdaaUxXSmxNVE10TnpabU1UTXhaakkxTmpWayJ9"  # API token for Cloudflare.
 
 # user added variables
+ansible_become_pass: "g2552p"
+smb_password: "pooptoast"
