@@ -2,21 +2,25 @@
 - name: Load default vault values
   template:
     src: vault.default.yaml
-    dest: "{{ playbook_dir }}/templates/vault.default.yaml"  # Ensure path is controlled
-  register: default_vault_content
+    dest: "{{ playbook_dir }}/vault.default.yaml"
 
 - name: Parse vault.default.yaml content
+  slurp:
+    src: "{{ playbook_dir }}/vault.default.yaml"
+  register: default_vault_content
+
+- name: Parse vault.default.yaml content into variable
   set_fact:
     default_vault: "{{ default_vault_content['content'] | b64decode | from_yaml }}"
 
 - name: Check if vault.yaml exists
   stat:
-    path: "{{ playbook_dir }}/files/vault.yaml"  # Controlled path for the vault file
+    path: "{{ playbook_dir }}/vault.yaml"
   register: vault_file
 
 - name: Load existing vault.yaml if it exists
   slurp:
-    src: "{{ playbook_dir }}/files/vault.yaml"
+    src: "{{ playbook_dir }}/vault.yaml"
   register: existing_vault_content
   when: vault_file.stat.exists
 
@@ -45,14 +49,14 @@
 - name: Save updated vault.yaml
   copy:
     content: "{{ updated_vault | to_nice_yaml }}"
-    dest: "{{ playbook_dir }}/files/vault.yaml"
+    dest: "{{ playbook_dir }}/vault.yaml"
     owner: root
     group: root
     mode: '0600'
   no_log: true
 
 - name: Encrypt vault.yaml
-  command: "ansible-vault encrypt {{ playbook_dir }}/files/vault.yaml"
+  command: "ansible-vault encrypt {{ playbook_dir }}/vault.yaml"
   args:
-    creates: "{{ playbook_dir }}/files/vault.yaml"
+    creates: "{{ playbook_dir }}/vault.yaml"
   when: vault_file.stat.exists == false or updated_vault != existing_vault

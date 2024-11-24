@@ -1,12 +1,16 @@
 ---
+- name: Ensure sensitive variables in vault.yaml are complete
+  hosts: localhost
+  gather_facts: false
+  roles:
+    - dnans_vault
+
 - name: Configure dnans server
   hosts: servers
   become: yes
-  gather_facts: true
   vars_files:
     - vault.yaml
   roles:
-    - dnans_vault
     - dnans_host
     - dnans_smb
     - dnans_docker
