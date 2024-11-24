@@ -32,8 +32,8 @@
   set_fact:
     existing_vault: "{{ existing_vault_content['content'] | b64decode | from_yaml }}"
   when: vault_file.stat.exists and existing_vault_content.content != ''
-  vars:
-    ansible_decrypt_vault: true
+#  vars:
+#    ansible_decrypt_vault: true
 
 - name: Parse vault.default.yaml content into variable
   set_fact:
@@ -44,6 +44,13 @@
   stat:
     path: "{{ playbook_dir }}/vault.yaml"
   register: vault_file
+  ignore_errors: true  # Allow it to fail gracefully if the file doesn't exist
+
+# addition, might be wrong spot
+- name: Ensure vault_file is defined
+  set_fact:
+    vault_file: { "stat": { "exists": false } }
+  when: vault_file is not defined
 
 - name: Load existing vault.yaml if it exists
   slurp:
