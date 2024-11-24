@@ -3,8 +3,16 @@
   template:
     src: vault.default.yaml
     dest: /tmp/vault.default.yaml
+  check_mode: no  # Force execution in check mode
+  register: template_result
 
-- name: Debug - Check if /tmp/vault.default.yaml exists after template
+- name: Debug - Check template task result
+  debug:
+    msg:
+      - "Template Result: {{ template_result }}"
+      - "Template file would be created at: /tmp/vault.default.yaml"
+
+- name: Check if /tmp/vault.default.yaml exists
   stat:
     path: /tmp/vault.default.yaml
   register: vault_temp_file
@@ -12,16 +20,18 @@
 - name: Fail if /tmp/vault.default.yaml does not exist
   fail:
     msg: "The vault.default.yaml was not created in /tmp."
-  when: not vault_temp_file.stat.exists
+  when: not vault_temp_file.stat.exists and not ansible_check_mode
 
 - name: Parse vault.default.yaml content
   slurp:
     src: /tmp/vault.default.yaml
   register: default_vault_content
+  when: vault_temp_file.stat.exists
 
 - name: Parse vault.default.yaml content into variable
   set_fact:
     default_vault: "{{ default_vault_content['content'] | b64decode | from_yaml }}"
+  when: default_vault_content is defined
 
 - name: Check if vault.yaml exists
   stat:
@@ -64,9 +74,10 @@
     group: root
     mode: '0600'
   no_log: true
+  when: not ansible_check_mode
 
 - name: Encrypt vault.yaml
   command: "ansible-vault encrypt {{ playbook_dir }}/vault.yaml"
   args:
     creates: "{{ playbook_dir }}/vault.yaml"
-  when: vault_file.stat.exists == false or updated_vault != existing_vault
+  when: not ansible_check_mode and (vault_file.stat.exists == false or updated_vault != existing_vault)
