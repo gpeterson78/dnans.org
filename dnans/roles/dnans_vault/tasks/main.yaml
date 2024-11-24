@@ -4,7 +4,7 @@
     src: vault.default.yaml
     dest: /tmp/vault.default.yaml
 
-- name: Debug: Check if /tmp/vault.default.yaml exists after template
+- name: Debug - Check if /tmp/vault.default.yaml exists after template
   stat:
     path: /tmp/vault.default.yaml
   register: vault_temp_file
