@@ -1,74 +1,66 @@
 ---
-- name: Load default vault values
+# Step 1: Load the default vault template
+- name: Load default vault template
   template:
     src: vault.default.yaml
     dest: /tmp/vault.default.yaml
-  check_mode: no  # Force execution in check mode
   register: template_result
+  check_mode: no  # Always generate the temporary file
 
-- name: Debug - Check template task result
-  debug:
-    msg:
-      - "Template Result: {{ template_result }}"
-      - "Template file would be created at: /tmp/vault.default.yaml"
-
+# Step 2: Verify the template file exists
 - name: Check if /tmp/vault.default.yaml exists
   stat:
     path: /tmp/vault.default.yaml
   register: vault_temp_file
 
-- name: Fail if /tmp/vault.default.yaml does not exist
+- name: Fail if /tmp/vault.default.yaml was not created
   fail:
     msg: "The vault.default.yaml was not created in /tmp."
-  when: not vault_temp_file.stat.exists and not ansible_check_mode
+  when: not vault_temp_file.stat.exists
 
-#- name: Parse vault.default.yaml content
-#  slurp:
-#    src: /tmp/vault.default.yaml
-#  register: default_vault_content
-#  when: vault_temp_file.stat.exists
+# Step 3: Parse the default vault values
+- name: Parse default vault values
+  slurp:
+    src: /tmp/vault.default.yaml
+  register: default_vault_content
 
-- name: Parse vault.yaml content if it exists
-  set_fact:
-    existing_vault: "{{ existing_vault_content['content'] | b64decode | from_yaml }}"
-  when: vault_file.stat.exists and existing_vault_content.content != ''
-#  vars:
-#    ansible_decrypt_vault: true
-
-- name: Parse vault.default.yaml content into variable
+- name: Convert default vault values to variable
   set_fact:
     default_vault: "{{ default_vault_content['content'] | b64decode | from_yaml }}"
-  when: default_vault_content is defined
 
+# Step 4: Check if vault.yaml exists
 - name: Check if vault.yaml exists
   stat:
     path: "{{ playbook_dir }}/vault.yaml"
   register: vault_file
-  ignore_errors: true  # Allow it to fail gracefully if the file doesn't exist
+  ignore_errors: true
 
-# addition, might be wrong spot
-- name: Ensure vault_file is defined
+# Ensure the vault_file variable is always defined
+- name: Ensure vault_file variable is defined
   set_fact:
     vault_file: { "stat": { "exists": false } }
   when: vault_file is not defined
 
-- name: Load existing vault.yaml if it exists
+# Step 5: Load existing vault.yaml if it exists
+- name: Load existing vault.yaml
   slurp:
     src: "{{ playbook_dir }}/vault.yaml"
   register: existing_vault_content
   when: vault_file.stat.exists
 
-- name: Parse vault.yaml content if it exists
+- name: Parse existing vault.yaml content
   set_fact:
     existing_vault: "{{ existing_vault_content['content'] | b64decode | from_yaml }}"
   when: vault_file.stat.exists and existing_vault_content.content != ''
 
+# Step 6: Initialize an empty vault if it doesn't exist
 - name: Initialize empty vault if missing
   set_fact:
     existing_vault: {}
   when: existing_vault is not defined
 
-- name: Merge existing vault with default and generate sensitive values
+# Step 7: Merge default and existing vault, generate missing sensitive values
+- name: Merge vaults and generate missing sensitive values
   set_fact:
     updated_vault: >-
       {{
@@ -80,6 +72,7 @@
         })
       }}
 
+# Step 8: Save the updated vault.yaml
 - name: Save updated vault.yaml
   copy:
     content: "{{ updated_vault | to_nice_yaml }}"
@@ -90,6 +83,7 @@
   no_log: true
   when: not ansible_check_mode
 
+# Step 9: Encrypt the vault.yaml file if necessary
 - name: Encrypt vault.yaml
   command: "ansible-vault encrypt {{ playbook_dir }}/vault.yaml"
   args:
