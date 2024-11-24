@@ -1,9 +1,3 @@
-# dnans.yaml
----
-- name: Configure dnans server
-  hosts: servers
-  become: yes
-
 - name: Ensure vault.yaml is complete
   hosts: localhost
   tasks:
@@ -41,12 +35,4 @@
         owner: root
         group: root
         mode: '0600'
-      no_log: true  # Prevent sensitive values from being logged
-      
-  vars_files:
-    - vault.yaml
-  roles:
-    - dnans_host
-    - dnans_smb
-    - dnans_docker
-    - dnans_wordpress
+      no_log: true
