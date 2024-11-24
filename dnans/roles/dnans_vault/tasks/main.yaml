@@ -1,10 +1,9 @@
 ---
-# Step 1: Load the default vault template
+# Step 1: Load default vault template
 - name: Load default vault template
   template:
     src: vault.default.yaml
     dest: /tmp/vault.default.yaml
-  register: template_result
   check_mode: no  # Always generate the temporary file
 
 # Step 2: Verify the template file exists
@@ -41,17 +40,16 @@
     vault_file: { "stat": { "exists": false } }
   when: vault_file is not defined
 
-# Step 5: Load existing vault.yaml if it exists
-- name: Load existing vault.yaml
-  slurp:
-    src: "{{ playbook_dir }}/vault.yaml"
-  register: existing_vault_content
+# Step 5: Decrypt and load existing vault.yaml if it exists
+- name: Load existing vault.yaml if it exists
+  command: "ansible-vault view {{ playbook_dir }}/vault.yaml"
+  register: existing_vault_raw
   when: vault_file.stat.exists
 
-- name: Parse existing vault.yaml content
+- name: Parse decrypted vault.yaml content
   set_fact:
-    existing_vault: "{{ existing_vault_content['content'] | b64decode | from_yaml }}"
-  when: vault_file.stat.exists and existing_vault_content.content != ''
+    existing_vault: "{{ existing_vault_raw.stdout | from_yaml }}"
+  when: vault_file.stat.exists
 
 # Step 6: Initialize an empty vault if it doesn't exist
 - name: Initialize empty vault if missing
