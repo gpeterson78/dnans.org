@@ -1,4 +1,21 @@
 ---
+- name: Check and prompt for ansible_become_pass
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - vault.yaml
+  vars_prompt:
+    - name: "ansible_become_pass"
+      prompt: "Enter the ansible_become_pass (sudo password):"
+      private: yes
+      when: ansible_become_pass | default('') == ""
+
+  tasks:
+    - name: Validate ansible_become_pass
+      fail:
+        msg: "ansible_become_pass is missing. Please provide it when prompted."
+      when: ansible_become_pass | default('') == ""
+
 - name: Ensure sensitive variables in vault.yaml are complete
   hosts: localhost
   gather_facts: false

@@ -49,7 +49,8 @@
           'immich_database_password': (lookup('password', '/dev/null length=31 chars=ascii_letters,digits')),
           'immich_database_root_password': (lookup('password', '/dev/null length=31 chars=ascii_letters,digits')),
           'wordpress_db_password': (lookup('password', '/dev/null length=16 chars=ascii_letters,digits')),
-          'wordpress_db_root_password': (lookup('password', '/dev/null length=31 chars=ascii_letters,digits'))
+          'wordpress_db_root_password': (lookup('password', '/dev/null length=31 chars=ascii_letters,digits')),
+          'smb_password': (lookup('password', '/dev/null length=16 chars=ascii_letters,digits'))
         })
       }}
   when: not vault_file.stat.exists
@@ -65,15 +66,7 @@
   command: "ansible-vault encrypt /tmp/vault.yaml --output={{ playbook_dir }}/vault.yaml"
   when: not vault_file.stat.exists
 
-# Step 7:
-- name: Prompt for ansible_become_pass if not set
-  vars_prompt:
-    - name: "input_become_pass"
-      prompt: "Enter the ansible_become_pass (sudo password):"
-      private: yes
-  when: existing_vault.ansible_become_pass == ""
-
-# Step 8: Merge and update vault.yaml with new values
+# Step 7: Merge and update vault.yaml with new values
 - name: Merge vaults and generate missing sensitive values
   set_fact:
     new_vault_content: >-
@@ -86,30 +79,22 @@
           'smb_password': (existing_vault.smb_password | default(lookup('password', '/dev/null length=16 chars=ascii_letters,digits')))
         })
       }}
+  when: vault_file.stat.exists
 
-- name: Update ansible_become_pass in vault content
-  set_fact:
-    new_vault_content: >-
-      {{
-        new_vault_content | combine({
-          'ansible_become_pass': input_become_pass
-        })
-      }}
-  when: input_become_pass is defined
-
-  # Step 9
-- name: Save new vault.yaml content to a temporary file
+# Step 8: Save the merged vault content back to the file
+- name: Save updated vault.yaml content to a temporary file
   copy:
     content: "{{ new_vault_content | to_nice_yaml }}"
     dest: "/tmp/vault.yaml"
     mode: '0600'
 
-- debug:
-    var: new_vault_content
-
 - name: Encrypt and replace vault.yaml
   command:
-    cmd: "ansible-vault encrypt /tmp/vault.yaml --output={{ vault_file_path }}"
+    cmd: "ansible-vault encrypt /tmp/vault.yaml --output={{ playbook_dir }}/vault.yaml"
   args:
     removes: "/tmp/vault.yaml"
   become: false
+
+# Debug for confirmation
+- debug:
+    var: new_vault_content
