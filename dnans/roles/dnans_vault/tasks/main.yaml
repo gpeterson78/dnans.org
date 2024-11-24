@@ -67,10 +67,11 @@
 
 # Step 7:
 - name: Prompt for ansible_become_pass if not set
-  pause:
-    prompt: "Enter the ansible_become_pass (sudo password):"
-  register: become_pass_input
-  when: new_vault_content.ansible_become_pass | default('') == ""
+  vars_prompt:
+    - name: "input_become_pass"
+      prompt: "Enter the ansible_become_pass (sudo password):"
+      private: yes
+  when: existing_vault.ansible_become_pass == ""
 
 # Step 8: Merge and update vault.yaml with new values
 - name: Merge vaults and generate missing sensitive values
@@ -88,19 +89,27 @@
 
 - name: Update ansible_become_pass in vault content
   set_fact:
-    new_vault_content:
-      "{{ new_vault_content | combine({'ansible_become_pass': become_pass_input.user_input}) }}"
-  when: become_pass_input is defined
+    new_vault_content: >-
+      {{
+        new_vault_content | combine({
+          'ansible_become_pass': input_become_pass
+        })
+      }}
+  when: input_become_pass is defined
 
   # Step 9
-
 - name: Save new vault.yaml content to a temporary file
   copy:
     content: "{{ new_vault_content | to_nice_yaml }}"
     dest: "/tmp/vault.yaml"
     mode: '0600'
-  when: not vault_file.stat.exists
+
+- debug:
+    var: new_vault_content
 
 - name: Encrypt and replace vault.yaml
-  command: "ansible-vault encrypt /tmp/vault.yaml --output={{ playbook_dir }}/vault.yaml"
-  when: vault_file.stat.exists
+  command:
+    cmd: "ansible-vault encrypt /tmp/vault.yaml --output={{ vault_file_path }}"
+  args:
+    removes: "/tmp/vault.yaml"
+  become: false
