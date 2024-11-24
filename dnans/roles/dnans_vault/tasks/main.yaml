@@ -44,6 +44,7 @@
 - name: Load existing vault.yaml if it exists
   command: "ansible-vault view {{ playbook_dir }}/vault.yaml"
   register: existing_vault_raw
+  failed_when: existing_vault_raw.rc != 0
   when: vault_file.stat.exists
 
 - name: Parse decrypted vault.yaml content
@@ -81,9 +82,7 @@
   no_log: true
   when: not ansible_check_mode
 
-# Step 9: Encrypt the vault.yaml file if necessary
+# Step 9: Encrypt the vault.yaml file
 - name: Encrypt vault.yaml
   command: "ansible-vault encrypt {{ playbook_dir }}/vault.yaml"
-  args:
-    creates: "{{ playbook_dir }}/vault.yaml"
-  when: not ansible_check_mode and (vault_file.stat.exists == false or updated_vault != existing_vault)
+  when: not ansible_check_mode and (vault_file.stat.exists == false or existing_vault_raw.stdout != updated_vault | to_nice_yaml)
