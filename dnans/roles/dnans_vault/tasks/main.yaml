@@ -54,17 +54,16 @@
       }}
   when: not vault_file.stat.exists
 
-- name: Save new vault.yaml
+- name: Save new vault.yaml content to a temporary file
   copy:
     content: "{{ new_vault_content | to_nice_yaml }}"
-    dest: /tmp/vault.yaml
+    dest: "/tmp/vault.yaml"
     owner: root
     group: root
     mode: '0600'
-  no_log: true
   when: not vault_file.stat.exists
 
-- name: Encrypt new vault.yaml
+- name: Encrypt and move the new vault.yaml to the project directory
   command: "ansible-vault encrypt /tmp/vault.yaml --output={{ playbook_dir }}/vault.yaml"
   when: not vault_file.stat.exists
 
@@ -80,15 +79,15 @@
           'wordpress_db_root_password': (existing_vault.wordpress_db_root_password | default(lookup('password', '/dev/null length=31 chars=ascii_letters,digits')))
         })
       }}
+  when: vault_file.stat.exists
 
-- name: Save updated vault.yaml to temporary file
+- name: Save updated vault.yaml to a temporary file
   copy:
     content: "{{ updated_vault | to_nice_yaml }}"
-    dest: /tmp/vault.yaml
+    dest: "/tmp/vault.yaml"
     owner: root
     group: root
     mode: '0600'
-  no_log: true
   when: vault_file.stat.exists
 
 - name: Encrypt and replace vault.yaml
