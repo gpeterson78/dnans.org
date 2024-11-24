@@ -40,20 +40,35 @@
     existing_vault: "{{ vault_encryption_status.stdout | from_yaml }}"
   when: vault_file.stat.exists and vault_encryption_status.rc == 0
 
-# Step 6: Initialize an empty encrypted vault.yaml if missing
-- name: Create an encrypted vault.yaml if missing
-  command: "ansible-vault create {{ playbook_dir }}/vault.yaml"
-  args:
-    stdin: "{{ default_vault | to_nice_yaml }}"
+# Step 6: Initialize a new encrypted vault.yaml if missing
+- name: Prepare new vault content
+  set_fact:
+    new_vault_content: >-
+      {{
+        default_vault | combine({
+          'immich_database_password': (lookup('password', '/dev/null length=31 chars=ascii_letters,digits')),
+          'immich_database_root_password': (lookup('password', '/dev/null length=31 chars=ascii_letters,digits')),
+          'wordpress_db_password': (lookup('password', '/dev/null length=16 chars=ascii_letters,digits')),
+          'wordpress_db_root_password': (lookup('password', '/dev/null length=31 chars=ascii_letters,digits'))
+        })
+      }}
   when: not vault_file.stat.exists
-  register: vault_creation_status
 
-- name: Fail if vault creation failed
-  fail:
-    msg: "Failed to create encrypted vault.yaml"
-  when: vault_creation_status.rc != 0
+- name: Save new vault.yaml
+  copy:
+    content: "{{ new_vault_content | to_nice_yaml }}"
+    dest: /tmp/vault.yaml
+    owner: root
+    group: root
+    mode: '0600'
+  no_log: true
+  when: not vault_file.stat.exists
 
-# Step 7: Merge default and existing vault, generate missing sensitive values
+- name: Encrypt new vault.yaml
+  command: "ansible-vault encrypt /tmp/vault.yaml --output={{ playbook_dir }}/vault.yaml"
+  when: not vault_file.stat.exists
+
+# Step 7: Merge and update vault.yaml with new values
 - name: Merge vaults and generate missing sensitive values
   set_fact:
     updated_vault: >-
@@ -66,8 +81,7 @@
         })
       }}
 
-# Step 8: Save the updated vault.yaml (encrypted)
-- name: Save updated vault.yaml
+- name: Save updated vault.yaml to temporary file
   copy:
     content: "{{ updated_vault | to_nice_yaml }}"
     dest: /tmp/vault.yaml
@@ -75,7 +89,8 @@
     group: root
     mode: '0600'
   no_log: true
+  when: vault_file.stat.exists
 
 - name: Encrypt and replace vault.yaml
   command: "ansible-vault encrypt /tmp/vault.yaml --output={{ playbook_dir }}/vault.yaml"
-  when: vault_file.stat.exists or vault_creation_status.rc == 0
+  when: vault_file.stat.exists
