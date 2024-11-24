@@ -3,7 +3,6 @@
   template:
     src: vault.default.yaml
     dest: /tmp/vault.default.yaml
-  register: default_vault_temp
 
 - name: Parse vault.default.yaml content
   slurp:
@@ -16,12 +15,12 @@
 
 - name: Check if vault.yaml exists
   stat:
-    path: vault.yaml
+    path: files/vault.yaml
   register: vault_file
 
 - name: Load existing vault.yaml if it exists
   slurp:
-    src: vault.yaml
+    src: files/vault.yaml
   register: existing_vault_content
   when: vault_file.stat.exists
 
@@ -50,14 +49,14 @@
 - name: Save updated vault.yaml
   copy:
     content: "{{ updated_vault | to_nice_yaml }}"
-    dest: vault.yaml
+    dest: files/vault.yaml
     owner: root
     group: root
     mode: '0600'
   no_log: true
 
 - name: Encrypt vault.yaml
-  command: "ansible-vault encrypt vault.yaml"
+  command: "ansible-vault encrypt files/vault.yaml"
   args:
-    creates: vault.yaml
+    creates: files/vault.yaml
   when: vault_file.stat.exists == false or updated_vault != existing_vault
