@@ -75,6 +75,7 @@
           'immich_database_root_password': (existing_vault.immich_database_root_password | default(lookup('password', '/dev/null length=31 chars=ascii_letters,digits'))),
           'wordpress_db_password': (existing_vault.wordpress_db_password | default(lookup('password', '/dev/null length=16 chars=ascii_letters,digits'))),
           'wordpress_db_root_password': (existing_vault.wordpress_db_root_password | default(lookup('password', '/dev/null length=31 chars=ascii_letters,digits')))
+          'smb_password': (existing_vault.smb_password | default(lookup('password', '/dev/null length=16 chars=ascii_letters,digits')))
         })
       }}
   when: vault_file.stat.exists
