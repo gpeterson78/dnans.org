@@ -81,14 +81,12 @@
       }}
   when: vault_file.stat.exists
 
-- name: Save updated vault.yaml to a temporary file
+- name: Save new vault.yaml content to a temporary file
   copy:
-    content: "{{ updated_vault | to_nice_yaml }}"
+    content: "{{ new_vault_content | to_nice_yaml }}"
     dest: "/tmp/vault.yaml"
-    owner: root
-    group: root
     mode: '0600'
-  when: vault_file.stat.exists
+  when: not vault_file.stat.exists
 
 - name: Encrypt and replace vault.yaml
   command: "ansible-vault encrypt /tmp/vault.yaml --output={{ playbook_dir }}/vault.yaml"
