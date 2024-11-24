@@ -1,4 +1,5 @@
 # roles/dnans_wordpress/tasks/main.yaml
+---
 
 - name: Ensure WordPress Docker Compose directory exists
   file:
@@ -8,11 +9,10 @@
     group: "{{ ansible_user }}"
     mode: '0755'
 
-- name: Generate or load WordPress DB passwords
-  set_fact:
-    wp_db_password: "{{ wordpress_db_password | default(lookup('password', '/dev/null length=16 chars=ascii_letters,digits')) }}"
-    wp_db_root_password: "{{ wordpress_db_root_password | default(lookup('password', '/dev/null length=31 chars=ascii_letters,digits')) }}"
-  when: not env_file_check.stat.exists
+- name: Check if .env file exists
+  stat:
+    path: "{{ docker_projects_path }}/wordpress/.env"
+  register: env_file_stat
 
 - name: Debug password (optional)
   debug:
@@ -20,17 +20,14 @@
       - "WordPress DB Password: {{ wp_db_password }}"
       - "WordPress DB Root Password: {{ wp_db_root_password }}"
 
-- name: Check if .env file exists
-  stat:
-    path: "{{ wordpress_project_path }}/.env"
-  register: env_file_stat
-
-- name: Generate or update .env file
+- name: Generate or update .env file for WordPress
   template:
     src: .env.j2
-    dest: "{{ wordpress_project_path }}/.env"
+    dest: "{{ docker_projects_path }}/wordpress/.env"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
     mode: '0644'
-  when: not env_file_stat.stat.exists or overwrite_env
+  when: not env_file_stat.stat.exists or overwrite_env | default(false)
 
 - name: Generate WordPress Docker Compose file
   template:

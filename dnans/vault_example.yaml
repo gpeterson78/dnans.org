@@ -1,0 +1,25 @@
+# Vault file containing sensitive information.
+# DO NOT share this file or include it in version control unless it's encrypted.
+
+# Privileged user password for ansible become operations (e.g., sudo)
+ansible_become_pass: "your_sudo_password_here"
+
+# Samba user password for shared SMB access
+smb_password: "your_smb_password_here"
+
+# Cloudflare DNS API token for Traefik Let's Encrypt DNS challenge
+cloudflare_dns_api_token: "your_cloudflare_dns_api_token_here"
+
+# WordPress database credentialsv
+# Uncomment and populate these if you want to set specific passwords instead of auto-generating them
+# wordpress_database_password: "your_wordpress_db_password_here"
+# wordpress_database_root_password: "your_wordpress_db_root_password_here"
+
+# Immich database credentials
+# Uncomment and populate these if you want to set specific passwords instead of auto-generating them
+# immich_database_password: "your_immich_db_password_here"
+# immich_database_root_password: "your_immich_db_root_password_here"
+
+# Add other sensitive information here as needed
+
+

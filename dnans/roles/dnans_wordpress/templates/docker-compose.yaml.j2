@@ -8,11 +8,11 @@ services:
       - traefik.http.routers.wordpress.entrypoints=websecure
       - traefik.http.routers.wordpress.tls=true
       - traefik.http.routers.wordpress.tls.certresolver=letsencrypt
-      - traefik.http.routers.wordpress.rule=Host(`\${WORDPRESS_URL}`)
+      - traefik.http.routers.wordpress.rule=Host(`\${WP_URL}`)
     env_file:
       - .env
     networks:
-      - ${DOCKER_NETWORK_NAME} 
+      - ${NETWORK_NAME} 
     volumes:
       - ${WORDPRESS_DATA_PATH}:/var/www/html
 
@@ -23,7 +23,7 @@ services:
     env_file:
       - .env
     networks:
-      - ${DOCKER_NETWORK_NAME}     
+      - ${NETWORK_NAME}     
     volumes:
       - ${WORDPRESS_DB_PATH}:/var/lib/mysql
 
@@ -36,12 +36,12 @@ services:
       - traefik.http.routers.wordpressphp.tls=true
       - traefik.http.routers.wordpressphp.tls.certresolver=letsencrypt
       - traefik.http.routers.wordpressphp.entrypoints=websecure
-      - traefik.http.routers.wordpressphp.rule=Host(`\${PHPMYADMIN_URL}`)
+      - traefik.http.routers.wordpressphp.rule=Host(`\${DBADMIN_URL}`)
     env_file:
       - .env
     networks:
-      - ${DOCKER_NETWORK_NAME}
+      - ${NETWORK_NAME}
       
 networks:
-  ${DOCKER_NETWORK_NAME}:
+  ${NETWORK_NAME}:
     external: true
