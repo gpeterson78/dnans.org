@@ -22,11 +22,18 @@
     msg: "The vault.default.yaml was not created in /tmp."
   when: not vault_temp_file.stat.exists and not ansible_check_mode
 
-- name: Parse vault.default.yaml content
-  slurp:
-    src: /tmp/vault.default.yaml
-  register: default_vault_content
-  when: vault_temp_file.stat.exists
+#- name: Parse vault.default.yaml content
+#  slurp:
+#    src: /tmp/vault.default.yaml
+#  register: default_vault_content
+#  when: vault_temp_file.stat.exists
+
+- name: Parse vault.yaml content if it exists
+  set_fact:
+    existing_vault: "{{ existing_vault_content['content'] | b64decode | from_yaml }}"
+  when: vault_file.stat.exists and existing_vault_content.content != ''
+  vars:
+    ansible_decrypt_vault: true
 
 - name: Parse vault.default.yaml content into variable
   set_fact:
