@@ -1,25 +1,17 @@
 ---
-- name: Check and prompt for ansible_become_pass
-  hosts: localhost
+- name: Ensure ansible_become_pass is defined
+  hosts: all
   gather_facts: false
   vars_files:
     - vault.yaml
   tasks:
-    - name: Check if ansible_become_pass is defined
-      set_fact:
-        prompt_for_become_pass: "{{ ansible_become_pass is not defined or ansible_become_pass == '' }}"
-
-    - name: Prompt for ansible_become_pass if not set
-      pause:
-        prompt: "Enter the ansible_become_pass (sudo password):"
-        echo: no
-      register: become_pass_input
-      when: prompt_for_become_pass
-
-    - name: Set ansible_become_pass variable
-      set_fact:
-        ansible_become_pass: "{{ become_pass_input.user_input }}"
-      when: prompt_for_become_pass
+    - name: Verify ansible_become_pass is defined
+      assert:
+        that:
+          - ansible_become_pass is defined
+        fail_msg: >
+          'ansible_become_pass' is not defined. Please provide it via the --ask-become-pass flag
+          or ensure it's set in the 'vault.yaml' file.
 
 - name: Ensure sensitive variables in vault.yaml are complete
   hosts: localhost
