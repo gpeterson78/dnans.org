@@ -1,5 +1,4 @@
 ---
-
 - name: Ensure immich Docker Compose directory exists
   file:
     path: "{{ docker_projects_path }}/immich"

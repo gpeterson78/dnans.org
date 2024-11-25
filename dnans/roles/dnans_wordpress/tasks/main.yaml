@@ -30,8 +30,8 @@
   when: not env_file_stat.stat.exists or overwrite_env | default(false)
 
 - name: Generate WordPress Docker Compose file
-  template:
-    src: docker-compose.yaml.j2
+  copy:
+    src: docker-compose.yaml
     dest: "{{ docker_projects_path }}/wordpress/docker-compose.yaml"
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"

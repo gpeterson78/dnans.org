@@ -10,7 +10,7 @@ services:
     volumes:
       - ${IMMICH_SERVER_PATH}:/app/data
     networks:
-      - ${DOCKER_NETWORK_NAME}
+      - ${NETWORK_NAME}
 
   immich-microservices:
     image: ghcr.io/immich-app/immich-microservices:${IMMICH_VERSION}
@@ -19,7 +19,7 @@ services:
     env_file:
       - .env
     networks:
-      - ${DOCKER_NETWORK_NAME}
+      - ${NETWORK_NAME}
 
   immich-redis:
     image: redis:alpine
@@ -28,7 +28,7 @@ services:
     env_file:
       - .env
     networks:
-      - ${DOCKER_NETWORK_NAME}
+      - ${NETWORK_NAME}
 
   immich-db:
     image: postgres:14
@@ -42,5 +42,5 @@ services:
       - ${DOCKER_NETWORK_NAME}
 
 networks:
-  ${DOCKER_NETWORK_NAME}:
+  ${NETWORK_NAME}:
     external: true
