@@ -16,7 +16,7 @@ scripts_path: "{{ project_path }}/scripts"  # Path for custom scripts (if any)
 
 # Docker Configuration
 docker_projects_path: "{{ project_path }}/docker"  # Path for all Docker Compose projects
-docker_network_name: dnans_network  # Bridge network name
+docker_network_name: "dnans_network" # Bridge network name
 
 # Cloudflare Configuration
 cloudflare_email: grady@gradyp.com
