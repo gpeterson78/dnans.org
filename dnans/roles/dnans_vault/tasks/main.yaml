@@ -1,10 +1,10 @@
 ---
 # Step 1: Load default vault template
-- name: Load default vault template
-  template:
+- name: Copy default vault template to temporary location
+  copy:
     src: vault.default.yaml
     dest: /tmp/vault.default.yaml
-  check_mode: no  # Always generate the temporary file
+  check_mode: no  # Always copy the file to ensure consistency
 
 # Step 2: Parse the default vault values
 - name: Parse default vault values
