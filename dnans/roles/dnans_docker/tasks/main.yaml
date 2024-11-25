@@ -36,6 +36,13 @@
     src: .env.j2
     dest: "{{ docker_projects_path }}/traefik/.env"
     mode: '0644'
+  vars:
+    cloudflare_dns_api_token: "{{ cloudflare_dns_api_token | default('') }}"
+
+- name: Warn if Cloudflare DNS API token is not set
+  debug:
+    msg: "Warning: 'cloudflare_dns_api_token' is not defined. Proceeding without it."
+  when: cloudflare_dns_api_token == ''
 
 - name: Generate docker-compose.yaml for traefik
   template:
