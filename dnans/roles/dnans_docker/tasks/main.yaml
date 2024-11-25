@@ -36,8 +36,6 @@
     src: .env.j2
     dest: "{{ docker_projects_path }}/traefik/.env"
     mode: '0644'
-  vars:
-    cloudflare_dns_api_token: "{{ cloudflare_dns_api_token | default('') }}"
 
 - name: Warn if Cloudflare DNS API token is not set
   debug:
