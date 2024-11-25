@@ -1,16 +1,17 @@
 ---
-- name: Ensure ansible_become_pass is defined
+- name: Validate ansible_become_pass
   hosts: all
   gather_facts: false
   vars_files:
     - vault.yaml
   tasks:
-    - name: Verify ansible_become_pass is defined
+    - name: Ensure ansible_become_pass is defined
       assert:
         that:
           - ansible_become_pass is defined
+          - ansible_become_pass | length > 0
         fail_msg: >
-          'ansible_become_pass' is not defined. Please provide it via the --ask-become-pass flag
+          'ansible_become_pass' is not defined or is empty. Please provide it via the --ask-become-pass (-K) flag
           or ensure it's set in the 'vault.yaml' file.
 
 - name: Ensure sensitive variables in vault.yaml are complete
