@@ -40,7 +40,7 @@
 - name: Warn if Cloudflare DNS API token is not set
   ansible.builtin.debug:
     msg: "Warning: The Cloudflare DNS API token is not set."
-  when: cloudflare_dns_api_token | default('') == ''
+  when: cloudflare_api_token | default('') == ''
 
 - name: Generate docker-compose.yaml for traefik
   template:
