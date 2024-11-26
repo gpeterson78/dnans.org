@@ -31,6 +31,7 @@ wordpress_database_user: wp_user
 
 # immich configuration
 immich_url: immich.dnans.org
+photo_share: "{{ project_path }}/shared/photos"  # Path for immich external library
 # immich_version:             # The immich version to use. You can pin this to a specific version like "v1.71.0"
 # immich_database_name:       # default: immich
 # immich_database_user:       # default: immich
