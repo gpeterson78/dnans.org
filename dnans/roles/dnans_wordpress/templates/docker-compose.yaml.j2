@@ -8,7 +8,7 @@ services:
       - traefik.http.routers.wordpress.entrypoints=websecure
       - traefik.http.routers.wordpress.tls=true
       - traefik.http.routers.wordpress.tls.certresolver=letsencrypt
-      - traefik.http.routers.wordpress.rule=Host(`\${WP_URL}`)
+      - traefik.http.routers.wordpress.rule=Host(`{{ wordpress_url }}`)
     environment:
       WORDPRESS_DB_HOST: wordpressdb:3306
       WORDPRESS_DB_USER: ${MYSQL_DATABASE_USER_NAME}
@@ -43,7 +43,7 @@ services:
       - traefik.http.routers.wordpressphp.tls=true
       - traefik.http.routers.wordpressphp.tls.certresolver=letsencrypt
       - traefik.http.routers.wordpressphp.entrypoints=websecure
-      - traefik.http.routers.wordpressphp.rule=Host(`\${DBADMIN_URL}`)
+      - traefik.http.routers.wordpressphp.rule=Host(`{{ phpmyadmin_url }}`)
     networks:
       - {{ docker_network_name }} 
     environment:
