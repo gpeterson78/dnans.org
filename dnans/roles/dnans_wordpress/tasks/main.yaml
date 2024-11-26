@@ -31,7 +31,7 @@
 
 - name: generate WordPress Docker Compose file
   template:
-    src: docker-compose.yaml,j2
+    src: docker-compose.yaml.j2
     dest: "{{ docker_projects_path }}/wordpress/docker-compose.yaml"
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
