@@ -29,9 +29,9 @@
     mode: '0644'
   when: not env_file_stat.stat.exists or overwrite_env | default(false)
 
-- name: Generate WordPress Docker Compose file
-  copy:
-    src: docker-compose.yaml
+- name: generate WordPress Docker Compose file
+  template:
+    src: docker-compose.yaml,j2
     dest: "{{ docker_projects_path }}/wordpress/docker-compose.yaml"
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"

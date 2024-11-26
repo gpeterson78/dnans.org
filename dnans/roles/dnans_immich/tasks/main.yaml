@@ -22,8 +22,8 @@
   when: not env_file_check.stat.exists
 
 - name: Copy immich Docker Compose file
-  copy:
-    src: docker-compose.yaml
+  template:
+    src: docker-compose.yaml.j2
     dest: "{{ docker_projects_path }}/immich/docker-compose.yaml"
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"

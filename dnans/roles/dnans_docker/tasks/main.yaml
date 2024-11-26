@@ -43,8 +43,8 @@
   when: cloudflare_api_token | default('') == ''
 
 - name: Generate docker-compose.yaml for traefik
-  copy:
-    src: docker-compose.yaml
+  template:
+    src: docker-compose.yaml.j2
     dest: "{{ docker_projects_path }}/traefik/docker-compose.yaml"
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"

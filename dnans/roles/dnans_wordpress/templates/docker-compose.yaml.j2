@@ -12,7 +12,7 @@ services:
     env_file:
       - .env
     networks:
-      - ${NETWORK_NAME} 
+      - {{ docker_network_name }} 
     volumes:
       - ${WORDPRESS_DATA_PATH}:/var/www/html
 
@@ -23,7 +23,7 @@ services:
     env_file:
       - .env
     networks:
-      - ${NETWORK_NAME}     
+      - {{ docker_network_name }}     
     volumes:
       - ${WORDPRESS_DB_PATH}:/var/lib/mysql
 
@@ -40,8 +40,8 @@ services:
     env_file:
       - .env
     networks:
-      - ${NETWORK_NAME}
+      - {{ docker_network_name }}
       
 networks:
-  ${NETWORK_NAME}:
+  {{ docker_network_name }}:
     external: true
