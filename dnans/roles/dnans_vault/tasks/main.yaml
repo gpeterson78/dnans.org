@@ -46,8 +46,7 @@
     new_vault_content: >-
       {{
         default_vault | combine({
-          'immich_database_password': (lookup('password', '/dev/null length=31 chars=ascii_letters,digits')),
-          'immich_database_root_password': (lookup('password', '/dev/null length=31 chars=ascii_letters,digits')),
+          'immich_database_password': (lookup('password', '/dev/null length=16 chars=ascii_letters,digits')),
           'wordpress_database_password': (lookup('password', '/dev/null length=16 chars=ascii_letters,digits')),
           'wordpress_database_root_password': (lookup('password', '/dev/null length=31 chars=ascii_letters,digits')),
           'smb_password': (lookup('password', '/dev/null length=16 chars=ascii_letters,digits'))
