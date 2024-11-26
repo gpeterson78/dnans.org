@@ -1,0 +1,47 @@
+services:
+  wordpress:
+    image: wordpress
+    container_name: wordpress
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.wordpress.entrypoints=websecure
+      - traefik.http.routers.wordpress.tls=true
+      - traefik.http.routers.wordpress.tls.certresolver=letsencrypt
+      - traefik.http.routers.wordpress.rule=Host(`\${WP_URL}`)
+    env_file:
+      - .env
+    networks:
+      - {{ docker_network_name }} 
+    volumes:
+      - ./data/:/var/www/html
+
+  wordpressdb:
+    image: mariadb
+    container_name: wordpressdb
+    restart: unless-stopped
+    env_file:
+      - .env
+    networks:
+      - {{ docker_network_name }}     
+    volumes:
+      - ./database/:/var/lib/mysql
+
+  pma: 
+    image: phpmyadmin
+    container_name: wordpressphp
+    restart: always
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.wordpressphp.tls=true
+      - traefik.http.routers.wordpressphp.tls.certresolver=letsencrypt
+      - traefik.http.routers.wordpressphp.entrypoints=websecure
+      - traefik.http.routers.wordpressphp.rule=Host(`\${DBADMIN_URL}`)
+    env_file:
+      - .env
+    networks:
+      - {{ docker_network_name }}
+      
+networks:
+  {{ docker_network_name }}:
+    external: true

@@ -27,15 +27,12 @@ letsencrypt_email: gradyp@snand.org
 # WordPress Configuration
 wordpress_url: wordpress.dnans.org
 phpmyadmin_url: phpmyadmin.dnans.org
-wordpress_db_user: wp_user
-wordpress_data_path: "{{ docker_projects_path }}/wordpress/data"
-wordpress_db_path: "{{ docker_projects_path }}/wordpress/db"
+wordpress_database_user: wp_user
 
 # immich configuration
-immich_env_name: immich
 immich_url: immich.dnans.org
-# immich_version: 
-# immich_database_name: 
-# immich_database_user: 
-# immich_database_password: 
-# immich_server_path:
+# immich_version:             # The immich version to use. You can pin this to a specific version like "v1.71.0"
+# immich_database_name:       # default: immich
+# immich_database_user:       # default: immich
+# immich_database_password:   # default: auto generated random 16 character password
+# immich_server_path:         # default: auto generated random 31 character password

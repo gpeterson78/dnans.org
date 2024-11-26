@@ -8,25 +8,32 @@ services:
       - traefik.http.routers.wordpress.entrypoints=websecure
       - traefik.http.routers.wordpress.tls=true
       - traefik.http.routers.wordpress.tls.certresolver=letsencrypt
-      - traefik.http.routers.wordpress.rule=Host(`\${WP_URL}`)
-    env_file:
-      - .env
+      - traefik.http.routers.wordpress.rule=Host(`${WP_URL}`)
+    environment:
+      WORDPRESS_DB_HOST: wordpressdb:3306
+      WORDPRESS_DB_USER: ${MYSQL_DATABASE_USER_NAME}
+      WORDPRESS_DB_PASSWORD: ${MYSQL_DATABASE_PASSWORD}
+      WORDPRESS_DB_NAME: wordpress
     networks:
       - {{ docker_network_name }} 
     volumes:
-      - ${WORDPRESS_DATA_PATH}:/var/www/html
+      - ./data:/var/www/html
 
   wordpressdb:
     image: mariadb
     container_name: wordpressdb
     restart: unless-stopped
-    env_file:
-      - .env
+    environment:
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: ${MYSQL_DATABASE_USER_NAME}
+      MYSQL_PASSWORD: ${MYSQL_DATABASE_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_DATABASE_ROOT_PASSWORD}
     networks:
       - {{ docker_network_name }}     
     volumes:
-      - ${WORDPRESS_DB_PATH}:/var/lib/mysql
+      - ./db:/var/lib/mysql
 
+# Define the 'pma' service for phpMyAdmin.
   pma: 
     image: phpmyadmin
     container_name: wordpressphp
@@ -34,14 +41,16 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.wordpressphp.tls=true
-      - traefik.http.routers.wordpressphp.tls.certresolver=letsencrypt
+      - traefik.http.routers.wordpressphp.tls.certresolver=cloudflare-staging
       - traefik.http.routers.wordpressphp.entrypoints=websecure
-      - traefik.http.routers.wordpressphp.rule=Host(`\${DBADMIN_URL}`)
-    env_file:
-      - .env
+      - traefik.http.routers.wordpressphp.rule=Host(`${DBADMIN_URL}`)
     networks:
-      - {{ docker_network_name }}
-      
+      - {{ docker_network_name }} 
+    environment:
+      # Disable arbitrary server connection; use the configured host and port
+      - PMA_ARBITRARY=0 
+      - PMA_HOST=wordpressdb
+      - PMA_PORT=3306
 networks:
   {{ docker_network_name }}:
     external: true
