@@ -17,8 +17,8 @@
 - name: Debug password (optional)
   debug:
     msg:
-      - "WordPress DB Password: {{ wp_db_password }}"
-      - "WordPress DB Root Password: {{ wp_db_root_password }}"
+      - "WordPress DB Password: {{ wordpress_database_password }}"
+      - "WordPress DB Root Password: {{ wordpress_database_root_password }}"
 
 - name: Generate or update .env file for WordPress
   template:
