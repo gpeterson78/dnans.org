@@ -12,8 +12,8 @@ smb_password: ""
 immich_database_password: ""  # Password for the Immich database user.
 
 # WordPress Database Passwords
-wordpress_db_password: ""  # Password for the WordPress database user.
-wordpress_db_root_password: ""  # Root password for the WordPress database.
+wordpress_database_password: ""  # Password for the WordPress database user.
+wordpress_database_root_password: ""  # Root password for the WordPress database.
 
 # Cloudflare API Token
 cloudflare_api_token: ""  # API token for Cloudflare.
