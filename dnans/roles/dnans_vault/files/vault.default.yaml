@@ -5,7 +5,7 @@
 vault_version: 1  # Future use for schema versioning.
 
 # project variables
-# ansible_become_pass: "" 
+ansible_become_pass: "" 
 smb_password: ""
 
 # Immich Database Passwords
