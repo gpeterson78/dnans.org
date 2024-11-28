@@ -1,6 +1,7 @@
 ---
 - name: Ensure sensitive variables in vault.yaml are complete
   hosts: localhost
+  become: yes
   gather_facts: false
   roles:
     - dnans_vault
