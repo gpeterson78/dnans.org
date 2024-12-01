@@ -12,26 +12,26 @@
     dest: "vault.yaml"
   when: not vault_file.stat.exists
 
-# Prompt user to update vault if necessary
-- name: Prompt user to edit vault.yaml
+# Prompt the user for editing the vault
+- name: Ask user if they want to edit vault.yaml
   pause:
-    prompt: "Vault needs updates. Edit now? (Y/N)"
+    prompt: "Vault needs updates. Edit now? (yes/no)"
   register: user_input
 
-# Fail if the user opts not to edit
-- name: Error out if user declines to edit vault.yaml
+# Fail if the user says 'no'
+- name: Exit if user declines to edit vault.yaml
   fail:
-    msg: >-
-      Vault updates are required. Exiting as the user opted not to edit.
-  when: user_input.user_input | lower != 'y'
+    msg: "Vault updates are required. Exiting as the user opted not to edit."
+  when: user_input.user_input | lower == 'no'
 
 # Invoke ansible-vault edit
 - name: Open vault.yaml for editing
   ansible.builtin.command:
     cmd: ansible-vault edit vault.yaml
+  when: user_input.user_input | lower == 'yes'
 
-# Encrypt vault.yaml after edits
-- name: Encrypt vault.yaml
+# Ensure the vault file is encrypted after edits
+- name: Encrypt vault.yaml if not already encrypted
   ansible.builtin.command:
     cmd: ansible-vault encrypt vault.yaml
-  when: vault_file.stat.exists
+  when: not vault_file.stat.exists or user_input.user_input | lower == 'yes'
