@@ -25,6 +25,10 @@
        └── Start all Docker Compose projects
 
 
-
-
 ---
+
+**Todo:**
+- backup and restore
+- monitoring/alerting
+- shell access
+- remote file upload
