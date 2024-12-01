@@ -51,25 +51,25 @@
       when: ansible_become_pass is defined
 
     - name: Prompt user to set become password if missing
-      vars_prompt:
-        - name: new_become_password
-          prompt: "Enter the become password to set in vault.yaml"
-          private: yes
+      pause:
+        prompt: "Enter the become password to set in vault.yaml"
+        echo: no
+      register: become_password_input
       when: vault_data.ansible_become_pass | default("") == ""
 
     - name: Update vault.yaml with new become password
       set_fact:
         vault_data: >-
           {{
-            vault_data | combine({'ansible_become_pass': new_become_password})
+            vault_data | combine({'ansible_become_pass': become_password_input.user_input})
           }}
-      when: new_become_password is defined
+      when: become_password_input.user_input is defined
 
     - name: Save updated vault.yaml
       copy:
         content: "{{ vault_data | to_yaml }}"
         dest: "vault.yaml"
-      when: new_become_password is defined
+      when: become_password_input.user_input is defined
 
 # Encrypt the vault.yaml file
 - name: Encrypt vault.yaml
