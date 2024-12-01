@@ -6,10 +6,16 @@
   register: vault_file
 
 # Create vault.yaml from template if it does not exist
-- name: Create vault.yaml from template if missing
+- name: Create vault.yaml from template
   template:
     src: "{{ role_path }}/templates/vault.yaml.j2"
     dest: "vault.yaml"
+  when: not vault_file.stat.exists
+
+# Encrypt the vault immediately after creation
+- name: Encrypt vault.yaml if not already encrypted
+  ansible.builtin.command:
+    cmd: ansible-vault encrypt vault.yaml
   when: not vault_file.stat.exists
 
 # Prompt the user for editing the vault
@@ -18,20 +24,14 @@
     prompt: "Vault needs updates. Edit now? (yes/no)"
   register: user_input
 
-# Fail if the user says 'no'
+# Exit if the user declines to edit
 - name: Exit if user declines to edit vault.yaml
   fail:
     msg: "Vault updates are required. Exiting as the user opted not to edit."
   when: user_input.user_input | lower == 'no'
 
-# Invoke ansible-vault edit
+# Open vault.yaml for editing
 - name: Open vault.yaml for editing
   ansible.builtin.command:
     cmd: ansible-vault edit vault.yaml
   when: user_input.user_input | lower == 'yes'
-
-# Ensure the vault file is encrypted after edits
-- name: Encrypt vault.yaml if not already encrypted
-  ansible.builtin.command:
-    cmd: ansible-vault encrypt vault.yaml
-  when: not vault_file.stat.exists or user_input.user_input | lower == 'yes'
