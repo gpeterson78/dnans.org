@@ -8,7 +8,7 @@
 # Create vault.yaml from template if it does not exist
 - name: Create vault.yaml from template if missing
   template:
-    src: "{{ role_path }}/templates/vault.default.yaml.j2"
+    src: "{{ role_path }}/templates/vault.yaml.j2"
     dest: "vault.yaml"
   when: not vault_file.stat.exists
 
