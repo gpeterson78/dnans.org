@@ -1,10 +1,9 @@
 ---
-- name: Ensure sensitive variables in vault.yaml are complete
+- name: dnans Main Playbook
   hosts: localhost
   become: yes
-  gather_facts: false
   roles:
-    - dnans_vault
+    - role: dnans_vault
 
 - name: Configure dnans server
   hosts: servers

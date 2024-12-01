@@ -1,92 +1,78 @@
 ---
-- name: Setup vault.yaml and validate required values
-  hosts: localhost
-  gather_facts: false
-  vars:
-    vault_template: vault.yaml.j2
-    vault_file_path: vault.yaml                     # Destination path for the vault file
-    required_fields:                                # List of required fields to check
-      - ansible_become_pass
+# Ensure the vault.yaml file exists
+- name: Check if vault.yaml exists
+  stat:
+    path: "vault.yaml"  # Adjust to "group_vars/vault.yaml" or other standard location if needed
+  register: vault_file
 
-  tasks:
-    # Step 1: Check if vault.yaml exists
-    - name: Check if vault.yaml exists
-      stat:
-        path: "{{ vault_file_path }}"
-      register: vault_file
+- name: Create vault.yaml from template if it does not exist
+  template:
+    src: "{{ role_path }}/templates/vault.default.yaml.j2"
+    dest: "vault.yaml"  # Adjust to standard location if needed
+  when: not vault_file.stat.exists
 
-    - name: Create vault.yaml from template if it does not exist
-      template:
-        src: "{{ vault_template }}"
-        dest: "{{ vault_file_path }}"
-      when: not vault_file.stat.exists
+# Load and parse vault.yaml if it exists
+- name: Load vault.yaml content
+  slurp:
+    src: "vault.yaml"
+  register: vault_content
+  when: vault_file.stat.exists
 
-    # Step 2: Load vault.yaml for validation
-    - name: Load vault.yaml content
-      slurp:
-        src: "{{ vault_file_path }}"
-      register: vault_content
+- name: Parse vault.yaml content
+  set_fact:
+    vault_data: "{{ vault_content.content | b64decode | from_yaml }}"
+  when: vault_file.stat.exists
 
-    - name: Parse vault.yaml content
+# Validate required fields in vault.yaml
+- name: Validate required fields in vault.yaml
+  block:
+    - name: Identify missing required fields
       set_fact:
-        vault_data: "{{ vault_content.content | b64decode | from_yaml }}"
+        missing_fields: >-
+          {{
+            ['ansible_become_pass'] | selectattr('vault_data', 'not in') | list
+          }}
 
-    # Step 3: Check for missing required values
-    - name: Validate required fields in vault.yaml
-      block:
-        - name: Identify missing required fields
-          set_fact:
-            missing_fields: >-
-              {{
-                required_fields | selectattr('vault_data', 'not in') | list
-              }}
-
-        - name: Fail if required fields are missing
-          fail:
-            msg: >-
-              The following required fields are missing in vault.yaml: 
-              {{ missing_fields | join(', ') }}.
-              Please update vault.yaml or rerun the playbook with necessary inputs.
-          when: missing_fields | length > 0
-      when: vault_file.stat.exists
-
-    # Step 4: Handle become password
-    - name: Ensure become password is set
-      block:
-        - name: Use --ask-become-password if provided
-          debug:
-            msg: "--ask-become-password is being used, skipping password prompts."
-          when: ansible_become_pass is defined
-
-        - name: Prompt user to set become password if missing
-          vars_prompt:
-            - name: new_become_password
-              prompt: "Enter the become password to set in vault.yaml"
-              private: yes
-          when: vault_data.ansible_become_pass | default("") == ""
-
-        - name: Update vault.yaml with new become password
-          set_fact:
-            vault_data: >-
-              {{
-                vault_data | combine({'ansible_become_pass': new_become_password})
-              }}
-          when: new_become_password is defined
-
-        - name: Save updated vault.yaml
-          copy:
-            content: "{{ vault_data | to_yaml }}"
-            dest: "{{ vault_file_path }}"
-          when: new_become_password is defined
-
-    # Step 5: Encrypt vault.yaml
-    - name: Encrypt vault.yaml
-      ansible.builtin.command:
-        cmd: ansible-vault encrypt "{{ vault_file_path }}"
-      when: not vault_file.stat.exists or new_become_password is defined
-
-    # Debug message
-    - name: Debug - Vault setup complete
-      debug:
+    - name: Fail if required fields are missing
+      fail:
         msg: >-
-          Vault.yaml setup and encryption complete. Playbook can now proceed.
+          The following required fields are missing in vault.yaml:
+          {{ missing_fields | join(', ') }}.
+          Please update vault.yaml or rerun the playbook with necessary inputs.
+      when: missing_fields | length > 0
+  when: vault_file.stat.exists
+
+# Handle become password
+- name: Ensure become password is set
+  block:
+    - name: Use --ask-become-password if provided
+      debug:
+        msg: "--ask-become-password is being used, skipping password prompts."
+      when: ansible_become_pass is defined
+
+    - name: Prompt user to set become password if missing
+      vars_prompt:
+        - name: new_become_password
+          prompt: "Enter the become password to set in vault.yaml"
+          private: yes
+      when: vault_data.ansible_become_pass | default("") == ""
+
+    - name: Update vault.yaml with new become password
+      set_fact:
+        vault_data: >-
+          {{
+            vault_data | combine({'ansible_become_pass': new_become_password})
+          }}
+      when: new_become_password is defined
+
+    - name: Save updated vault.yaml
+      copy:
+        content: "{{ vault_data | to_yaml }}"
+        dest: "vault.yaml"
+      when: new_become_password is defined
+
+# Encrypt the vault.yaml file
+- name: Encrypt vault.yaml
+  ansible.builtin.command:
+    cmd: ansible-vault encrypt "vault.yaml"
+  when: not vault_file.stat.exists or new_become_password is defined

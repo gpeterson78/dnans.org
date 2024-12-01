@@ -1,0 +1,5 @@
+---
+- name: Test dnans_vault role
+  hosts: localhost
+  roles:
+    - role: dnans_vault
