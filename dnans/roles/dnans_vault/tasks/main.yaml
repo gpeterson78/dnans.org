@@ -1,99 +1,92 @@
 ---
-# Step 1: Load default vault template
-- name: Copy default vault template to temporary location
-  copy:
-    src: vault.default.yaml
-    dest: /tmp/vault.default.yaml
-  check_mode: no  # Always copy the file to ensure consistency
+- name: Setup vault.yaml and validate required values
+  hosts: localhost
+  gather_facts: false
+  vars:
+    vault_template: vault.yaml.j2
+    vault_file_path: vault.yaml                     # Destination path for the vault file
+    required_fields:                                # List of required fields to check
+      - ansible_become_pass
 
-# Step 2: Parse the default vault values
-- name: Parse default vault values
-  slurp:
-    src: /tmp/vault.default.yaml
-  register: default_vault_content
+  tasks:
+    # Step 1: Check if vault.yaml exists
+    - name: Check if vault.yaml exists
+      stat:
+        path: "{{ vault_file_path }}"
+      register: vault_file
 
-- name: Convert default vault values to variable
-  set_fact:
-    default_vault: "{{ default_vault_content['content'] | b64decode | from_yaml }}"
+    - name: Create vault.yaml from template if it does not exist
+      template:
+        src: "{{ vault_template }}"
+        dest: "{{ vault_file_path }}"
+      when: not vault_file.stat.exists
 
-# Step 3: Check if vault.yaml exists
-- name: Check if vault.yaml exists
-  stat:
-    path: "{{ playbook_dir }}/vault.yaml"
-  register: vault_file
+    # Step 2: Load vault.yaml for validation
+    - name: Load vault.yaml content
+      slurp:
+        src: "{{ vault_file_path }}"
+      register: vault_content
 
-# Step 4: Ensure the vault.yaml is encrypted if it exists
-- name: Check if vault.yaml is encrypted
-  command: "ansible-vault view {{ playbook_dir }}/vault.yaml"
-  register: vault_encryption_status
-  ignore_errors: true
-  when: vault_file.stat.exists
+    - name: Parse vault.yaml content
+      set_fact:
+        vault_data: "{{ vault_content.content | b64decode | from_yaml }}"
 
-- name: Fail if vault.yaml is unencrypted
-  fail:
-    msg: "The vault.yaml file exists but is unencrypted. Please encrypt it manually or remove it."
-  when: vault_file.stat.exists and vault_encryption_status.rc != 0
+    # Step 3: Check for missing required values
+    - name: Validate required fields in vault.yaml
+      block:
+        - name: Identify missing required fields
+          set_fact:
+            missing_fields: >-
+              {{
+                required_fields | selectattr('vault_data', 'not in') | list
+              }}
 
-# Step 5: Decrypt and load existing vault.yaml if encrypted
-- name: Parse existing vault.yaml content
-  set_fact:
-    existing_vault: "{{ vault_encryption_status.stdout | from_yaml }}"
-  when: vault_file.stat.exists and vault_encryption_status.rc == 0
+        - name: Fail if required fields are missing
+          fail:
+            msg: >-
+              The following required fields are missing in vault.yaml: 
+              {{ missing_fields | join(', ') }}.
+              Please update vault.yaml or rerun the playbook with necessary inputs.
+          when: missing_fields | length > 0
+      when: vault_file.stat.exists
 
-# Step 6: Initialize a new encrypted vault.yaml if missing
-- name: Prepare new vault content
-  set_fact:
-    new_vault_content: >-
-      {{
-        default_vault | combine({
-          'immich_database_password': (lookup('password', '/dev/null length=16 chars=ascii_letters,digits')),
-          'wordpress_database_password': (lookup('password', '/dev/null length=16 chars=ascii_letters,digits')),
-          'wordpress_database_root_password': (lookup('password', '/dev/null length=31 chars=ascii_letters,digits')),
-          'smb_password': (lookup('password', '/dev/null length=16 chars=ascii_letters,digits'))
-        })
-      }}
-  when: not vault_file.stat.exists
+    # Step 4: Handle become password
+    - name: Ensure become password is set
+      block:
+        - name: Use --ask-become-password if provided
+          debug:
+            msg: "--ask-become-password is being used, skipping password prompts."
+          when: ansible_become_pass is defined
 
-- name: Save new vault.yaml content to a temporary file
-  copy:
-    content: "{{ new_vault_content | to_nice_yaml }}"
-    dest: "/tmp/vault.yaml"
-    mode: '0600'
-  when: not vault_file.stat.exists
+        - name: Prompt user to set become password if missing
+          vars_prompt:
+            - name: new_become_password
+              prompt: "Enter the become password to set in vault.yaml"
+              private: yes
+          when: vault_data.ansible_become_pass | default("") == ""
 
-- name: Encrypt and move the new vault.yaml to the project directory
-  command: "ansible-vault encrypt /tmp/vault.yaml --output={{ playbook_dir }}/vault.yaml"
-  when: not vault_file.stat.exists
+        - name: Update vault.yaml with new become password
+          set_fact:
+            vault_data: >-
+              {{
+                vault_data | combine({'ansible_become_pass': new_become_password})
+              }}
+          when: new_become_password is defined
 
-# Step 7: Merge and update vault.yaml with new values
-- name: Merge vaults and generate missing sensitive values
-  set_fact:
-    new_vault_content: >-
-      {{
-        default_vault | combine(existing_vault, recursive=True) | combine({
-          'immich_database_password': (existing_vault.immich_database_password | default(lookup('password', '/dev/null length=31 chars=ascii_letters,digits'))),
-          'immich_database_root_password': (existing_vault.immich_database_root_password | default(lookup('password', '/dev/null length=31 chars=ascii_letters,digits'))),
-          'wordpress_db_password': (existing_vault.wordpress_db_password | default(lookup('password', '/dev/null length=16 chars=ascii_letters,digits'))),
-          'wordpress_db_root_password': (existing_vault.wordpress_db_root_password | default(lookup('password', '/dev/null length=31 chars=ascii_letters,digits'))),
-          'smb_password': (existing_vault.smb_password | default(lookup('password', '/dev/null length=16 chars=ascii_letters,digits')))
-        })
-      }}
-  when: vault_file.stat.exists
+        - name: Save updated vault.yaml
+          copy:
+            content: "{{ vault_data | to_yaml }}"
+            dest: "{{ vault_file_path }}"
+          when: new_become_password is defined
 
-# Step 8: Save the merged vault content back to the file
-- name: Save updated vault.yaml content to a temporary file
-  copy:
-    content: "{{ new_vault_content | to_nice_yaml }}"
-    dest: "/tmp/vault.yaml"
-    mode: '0600'
+    # Step 5: Encrypt vault.yaml
+    - name: Encrypt vault.yaml
+      ansible.builtin.command:
+        cmd: ansible-vault encrypt "{{ vault_file_path }}"
+      when: not vault_file.stat.exists or new_become_password is defined
 
-- name: Encrypt and replace vault.yaml
-  command:
-    cmd: "ansible-vault encrypt /tmp/vault.yaml --output={{ playbook_dir }}/vault.yaml"
-  args:
-    removes: "/tmp/vault.yaml"
-  become: false
-
-# Debug for confirmation
-- debug:
-    var: new_vault_content
+    # Debug message
+    - name: Debug - Vault setup complete
+      debug:
+        msg: >-
+          Vault.yaml setup and encryption complete. Playbook can now proceed.

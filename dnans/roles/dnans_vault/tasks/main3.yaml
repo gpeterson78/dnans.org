@@ -1,0 +1,75 @@
+# manage_vault/tasks/main.yml
+---
+- name: Check if vault.yaml exists
+  stat:
+    path: "{{ playbook_dir }}/vault.yaml"
+  register: vault_file
+
+- name: Ensure vault.yaml is encrypted
+  command: "ansible-vault view {{ playbook_dir }}/vault.yaml"
+  register: vault_view
+  ignore_errors: true
+  when: vault_file.stat.exists
+
+- name: Fail if vault.yaml exists but is not encrypted
+  fail:
+    msg: "vault.yaml exists but is not encrypted. Please encrypt it manually or remove it."
+  when: vault_file.stat.exists and vault_view.rc != 0
+
+- name: Decrypt vault.yaml for reading
+  command: "ansible-vault decrypt --output=/tmp/vault_decrypted.yaml {{ playbook_dir }}/vault.yaml"
+  when: vault_file.stat.exists and vault_view.rc == 0
+
+- name: Read decrypted vault.yaml
+  include_vars:
+    file: /tmp/vault_decrypted.yaml
+  when: vault_file.stat.exists and vault_view.rc == 0
+
+- name: Prompt for missing sensitive variables
+  vars_prompt:
+    - name: "immich_database_password"
+      prompt: "Enter immich database password"
+      private: yes
+      when: immich_database_password == ""
+    - name: "wordpress_database_password"
+      prompt: "Enter WordPress database password"
+      private: yes
+      when: wordpress_database_password == ""
+    - name: "wordpress_database_root_password"
+      prompt: "Enter WordPress database root password"
+      private: yes
+      when: wordpress_database_root_password == ""
+    - name: "smb_password"
+      prompt: "Enter SMB password"
+      private: yes
+      when: smb_password == ""
+
+- name: Combine existing and new variables
+  set_fact:
+    vault_content: >
+      {{
+        {
+          'immich_database_password': immich_database_password,
+          'wordpress_database_password': wordpress_database_password,
+          'wordpress_database_root_password': wordpress_database_root_password,
+          'smb_password': smb_password
+        }
+      }}
+
+- name: Write combined variables to temporary vault file
+  copy:
+    content: "{{ vault_content | to_nice_yaml }}"
+    dest: /tmp/vault.yaml
+    mode: '0600'
+
+- name: Encrypt the temporary vault file
+  command: "ansible-vault encrypt /tmp/vault.yaml --output={{ playbook_dir }}/vault.yaml"
+  args:
+    removes: /tmp/vault.yaml
+  become: false
+
+- name: Remove decrypted temporary file
+  file:
+    path: /tmp/vault_decrypted.yaml
+    state: absent
+  when: vault_file.stat.exists and vault_view.rc == 0
