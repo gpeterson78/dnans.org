@@ -2,59 +2,24 @@
 # Title Block 1: Check if vault.yaml exists and handle creation/setup
 - name: Check if vault.yaml exists
   stat:
-    path: "group_vars/all/vault.yaml"
+    path: "{{ playbook_dir }}/group_vars/all/vault.yaml"
   register: vault_file
 
 - name: Create an encrypted vault.yaml if it does not exist
   block:
-    - name: Create an empty vault.yaml
-      copy:
-        content: "{}"
-        dest: "group_vars/all/vault.yaml"
+    - name: Create vault.yaml from template
+      template:
+        src: "vault.yaml.j2"
+        dest: "{{ playbook_dir }}/group_vars/all/vault.yaml"
+      when: not vault_file.stat.exists
 
     - name: Encrypt the new vault.yaml
-      ansible.builtin.command:
-        cmd: ansible-vault encrypt group_vars/all/vault.yaml
-
-    - name: Check if playbook was run with --ask-become-password
-      fail:
-        msg: "This playbook requires the ansible become password (sudo password). Run it with --ask-become-password or provide the password when prompted."
-      when: ansible_become_pass is not defined
-
-    - name: Prompt user for the ansible become password
-      pause:
-        prompt: >-
-          This playbook requires the ansible become password (sudo password).
-          Please enter it now to save it to the vault.yaml.
-          If you do not wish to save the password, leave the entry blank
-          and ensure the playbook is run with --ask-become-password upon subsequent runs.
-      register: become_password_input
-      when: ansible_become_pass is not defined
-
-    - name: Fail if no become password is provided
-      fail:
-        msg: "Become password not provided. Exiting."
-      when: become_password_input.user_input == ""
-
-    - name: Add become password to vault.yaml
-      block:
-        - name: Decrypt vault.yaml temporarily
-          ansible.builtin.command:
-            cmd: ansible-vault decrypt group_vars/all/vault.yaml
-
-        - name: Add ansible_become_pass to vault.yaml
-          lineinfile:
-            path: "group_vars/all/vault.yaml"
-            line: "ansible_become_pass: {{ become_password_input.user_input }}"
-
-        - name: Re-encrypt vault.yaml
-          ansible.builtin.command:
-            cmd: ansible-vault encrypt group_vars/all/vault.yaml
-      when: become_password_input.user_input != ""
+      command: ansible-vault encrypt {{ playbook_dir }}/group_vars/all/vault.yaml
+      when: not vault_file.stat.exists
 
 # Title Block 2: Check if become password is set in vault.yaml
-- name: Check if ansible become password is set in vault.yaml
-  command: ansible-vault view group_vars/all/vault.yaml
+- name: Decrypt vault.yaml temporarily to check contents
+  command: ansible-vault view {{ playbook_dir }}/group_vars/all/vault.yaml
   register: vault_content
   changed_when: false
 
@@ -62,37 +27,32 @@
   set_fact:
     vault_data: "{{ vault_content.stdout | from_yaml }}"
 
-- name: Fail if ansible become password is not set
+- name: Ensure ansible_become_pass is set
   fail:
     msg: "The become password must be set in vault.yaml or the playbook must be run with --ask-become-password."
   when:
-    - vault_data.ansible_become_pass is not defined
+    - vault_data.ansible_become_pass | default('') == ''
     - ansible_become_pass is not defined
 
 # Title Block 4: Check if dnans_admin is set in vault.yaml
-- name: Check if dnans_admin is set in vault.yaml
-  set_fact:
-    admin_exists: "{{ vault_data.dnans_admin is defined }}"
-
-- name: Prompt for dnans_admin if not set
-  vars_prompt:
-    - name: admin_user
-      prompt: "Please provide the admin user name:"
-      private: no
-  when: not admin_exists
-
-- name: Add dnans_admin to vault.yaml
+- name: Ensure dnans_admin is set
   block:
+    - name: Prompt for dnans_admin if not set
+      vars_prompt:
+        - name: admin_user
+          prompt: "Please provide the admin user name:"
+          private: no
+      when: vault_data.dnans_admin | default('') == ''
+
     - name: Decrypt vault.yaml temporarily
-      ansible.builtin.command:
-        cmd: ansible-vault decrypt group_vars/all/vault.yaml
+      command: ansible-vault decrypt {{ playbook_dir }}/group_vars/all/vault.yaml
 
     - name: Add dnans_admin to vault.yaml
       lineinfile:
-        path: "group_vars/all/vault.yaml"
+        path: "{{ playbook_dir }}/group_vars/all/vault.yaml"
         line: "dnans_admin: {{ admin_user }}  # project global admin user"
+        create: yes
 
     - name: Re-encrypt vault.yaml
-      ansible.builtin.command:
-        cmd: ansible-vault encrypt group_vars/all/vault.yaml
-  when: not admin_exists
+      command: ansible-vault encrypt {{ playbook_dir }}/group_vars/all/vault.yaml
+  when: vault_data.dnans_admin | default('') == ''
