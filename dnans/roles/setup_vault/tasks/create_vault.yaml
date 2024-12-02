@@ -41,7 +41,7 @@
 
 - name: Generate ROOT password if not entered
   set_fact:
-    wordpress_database_password: "{{ root_password_input.user_input | default(lookup('password', '/dev/null chars=ascii_letters,digits length=15')) }}"
+    wordpress_database_root_password: "{{ root_password_input.user_input | default(lookup('password', '/dev/null chars=ascii_letters,digits length=15')) }}"
 
 - name: Prompt for Cloudflare API token
   pause:
@@ -71,4 +71,4 @@
       --name "cloudflare_api_token" >> group_vars/vault.yaml
   args:
     warn: false
-  no_log: true
+ # no_log: true
