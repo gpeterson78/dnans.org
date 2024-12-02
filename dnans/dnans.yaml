@@ -1,9 +1,59 @@
 ---
-- name: dnans Main Playbook
+- name: Main Playbook
   hosts: localhost
-  become: yes
-  roles:
-    - role: dnans_vault
+  vars_prompt:
+#    - name: admin_user
+#      prompt: "Please provide the admin user name:"
+#      private: no
+#      when: admin_user is not defined
+    - name: smb_password
+      prompt: "Please provide the SMB password (leave blank to auto-generate):"
+      private: yes
+      default: ""
+      when: smb_password is not defined
+    - name: wordpress_database_password
+      prompt: "Please provide the WordPress database password (leave blank to auto-generate):"
+      private: yes
+      default: ""
+      when: wordpress_database_password is not defined
+    - name: wordpress_database_root_password
+      prompt: "please enter the wordpress database root password (leave blank to auto-generate):"
+      private: yes
+      default: ""
+      when: wordpress_database_root_password is not defined
+    - name: immich_database_password
+      prompt: "please provide the immich database password (leave blank to auto-generate):"
+      private: yes
+      default: ""
+      when: immich_database is not defined
+
+  tasks:
+    - name: Set default or generated values for empty inputs
+      set_fact:
+        smb_password: "{{ smb_password | default(lookup('password', '/dev/null length=15 chars=ascii_letters,digits')) }}"
+        wordpress_database_password: "{{ wordpress_database_password | default(lookup('password', '/dev/null length=15 chars=ascii_letters,digits')) }}"
+        wordpress_database_root_password: "{{ wordpress_database_root_password | default(lookup('password', '/dev/null length=3.12 chars=ascii_letters,digits')) }}"
+        immich_database_password: "{{ immich_database_password | default(lookup('password', '/dev/null length=15 chars=ascii_letters,digits')) }}"
+
+    - name: Check if vault.yaml exists
+      stat:
+        path: "{{ playbook_dir }}/group_vars/all/vault.yaml"
+      register: vault_file
+
+    - name: Create and encrypt vault.yaml if it does not exist
+      block:
+        - name: Create vault.yaml with provided variables
+          copy:
+            dest: "{{ playbook_dir }}/group_vars/all/vault.yaml"
+            content: |
+              ansible_become_pass: "{{ ansible_become_pass | default('') }}"
+              smb_password: "{{ smb_password }}"
+              wordpress_database_password: "{{ wordpress_database_password }}"
+              wordpress_database_root_password:"{{ wordpress_database_root_password }}"
+              immich_database_password: "{{ immich_database_password }}"
+        - name: Encrypt the new vault.yaml
+          command: ansible-vault encrypt {{ playbook_dir }}/group_vars/all/vault.yaml
+      when: not vault_file.stat.exists
 
 - name: Configure dnans server
   hosts: servers
