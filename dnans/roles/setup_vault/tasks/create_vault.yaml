@@ -52,9 +52,9 @@
     prompt: "Enter Cloudflare API token (leave empty for default ''):"
   register: cloudflare_api_input
 
-- name: Create vault.yaml
+- name: Create vault_unencrypted.yaml
   copy:
-    dest: group_vars/vault.yaml
+    dest: group_vars/vault_unencrypted.yaml
     content: |
       ansible_become_password: "{{ become_password_input.user_input if become_password_input.user_input != '' else omit }}"
       smb_password: "{{ smb_password }}"
@@ -63,3 +63,14 @@
       wordpress_database_root_password: "{{ wordpress_database_root_password }}"
       cloudflare_api_token: "{{ cloudflare_api_input.user_input | default('') }}"
   no_log: true
+
+- name: Encrypt vault.yaml
+  command: >
+    ansible-vault encrypt group_vars/vault_unencrypted.yaml --output group_vars/vault.yaml
+  args:
+    warn: false
+
+- name: Remove unencrypted vault file
+  file:
+    path: group_vars/vault_unencrypted.yaml
+    state: absent

@@ -17,7 +17,7 @@
   hosts: servers
   become: yes
   vars_files:
-    - vault.yaml
+    - /group_vars/vault.yaml
   roles:
     - dnans_host
     - dnans_smb
