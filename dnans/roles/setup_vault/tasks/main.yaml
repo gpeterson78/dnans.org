@@ -13,4 +13,4 @@
     msg: >
       This playbook must be run with `--ask-become-pass` or have the `ansible_become_password`
       set in the vault. Edit `group_vars/vault.yaml` to include the `ansible_become_password`.
-  when: not ansible_become_password and not vault_file.stat.exists
+  when: not (ansible_become_password | default(None)) and not vault_file.stat.exists
