@@ -1,6 +1,8 @@
 ---
 - name: Main Playbook
   hosts: localhost
+  vars_files:
+  - vault.yaml
   vars_prompt:
 #    - name: admin_user
 #      prompt: "Please provide the admin user name:"
