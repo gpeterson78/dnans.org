@@ -3,27 +3,49 @@
   pause:
     prompt: "Enter the become password (leave empty to exclude):"
   register: become_password_input
+  no_log: true
 
 - name: Prompt for smb_password
   pause:
     prompt: "Enter SMB password (leave empty to auto-generate):"
   register: smb_password_input
+  no_log: true
 
 - name: Generate smb_password if not entered
   set_fact:
     smb_password: "{{ smb_password_input.user_input | default(lookup('password', '/dev/null chars=ascii_letters,digits length=15')) }}"
 
-- name: Set immich_database_password
+- name: Prompt for database password
+  pause:
+    prompt: "Enter database password (leave empty to auto-generate):"
+  register: database_password_input
+  no_log: true
+
+- name: generate database password if not entered
   set_fact:
-    immich_database_password: "{{ smb_password }}"
+    database_password: "{{ database_password_input.user_input | default(lookup('password', '/dev/null chars=ascii_letters,digits length=15')) }}"
+
+- name: Set immich database password
+  set_fact:
+    immich_database_password: "{{ database_password }}"
 
 - name: Set wordpress_database_password
   set_fact:
-    wordpress_database_password: "{{ smb_password }}"
+    wordpress_database_password: "{{ database_password }}"
+
+- name: Prompt for root password
+  pause:
+    prompt: "Enter ROOT password (leave empty to auto-generate):"
+  register: database_password_input
+  no_log: true
+  
+- name: Set root_password
+  set_fact:
+    root_password: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=31') }}"
 
 - name: Set wordpress_database_root_password
   set_fact:
-    wordpress_database_root_password: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=31') }}"
+    wordpress_database_root_password: "{{ root_password }}"
 
 - name: Prompt for cloudflare_api_token
   pause:
