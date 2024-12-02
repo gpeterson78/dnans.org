@@ -3,33 +3,76 @@
   hosts: localhost
   vars_files:
   - vault.yaml
-  vars_prompt:
-#    - name: admin_user
-#      prompt: "Please provide the admin user name:"
-#      private: no
-#      when: admin_user is not defined
-    - name: smb_password
-      prompt: "Please provide the SMB password (leave blank to auto-generate):"
-      private: yes
-      default: ""
-      when: smb_password is not defined
-    - name: wordpress_database_password
-      prompt: "Please provide the WordPress database password (leave blank to auto-generate):"
-      private: yes
-      default: ""
-      when: wordpress_database_password is not defined
-    - name: wordpress_database_root_password
-      prompt: "please enter the wordpress database root password (leave blank to auto-generate):"
-      private: yes
-      default: ""
-      when: wordpress_database_root_password is not defined
-    - name: immich_database_password
-      prompt: "please provide the immich database password (leave blank to auto-generate):"
-      private: yes
-      default: ""
-      when: immich_database is not defined
-
+  gather_facts: false
   tasks:
+  # smb password
+    - name: Check if 'smb_password' is defined
+      set_fact:
+        prompt_for_smb_password: "{{ smb_password is not defined }}"
+
+    - name: Prompt for SMB password if not defined
+      pause:
+        prompt: "Please provide the SMB password (leave blank to auto-generate):"
+        echo: false
+      register: smb_password_input
+      when: prompt_for_smb_password
+
+    - name: Set 'smb_password' variable
+      set_fact:
+        smb_password: "{{ smb_password_input.user_input }}"
+      when: prompt_for_smb_password
+
+  # wordpress database password
+    - name: Check if 'wordpress_database_password' is defined
+      set_fact:
+        prompt_for_wordpress_database_password: "{{ wordpress_database_password is not defined }}"
+
+    - name: Prompt for wordpress database password if not defined
+      pause:
+        prompt: "Please provide the wordpress database password (leave blank to auto-generate):"
+        echo: false
+      register: wordpress_database_password_input
+      when: prompt_for_wordpress_database_password
+
+    - name: Set 'wordpress_database_password' variable
+      set_fact:
+        wordpress_database_password: "{{ wordpress_database_password_input.user_input }}"
+      when: prompt_for_wordpress_database_password
+
+# wordpress database root password
+    - name: Check if 'wordpress_database_root_password' is defined
+      set_fact:
+        prompt_for_wordpress_database_root_password: "{{ wordpress_database_root_password is not defined }}"
+
+    - name: Prompt for wordpress database root password if not defined
+      pause:
+        prompt: "Please provide the wordpress database root password (leave blank to auto-generate):"
+        echo: false
+      register: wordpress_database_root_password_input
+      when: prompt_for_wordpress_database_root_password
+
+    - name: Set 'wordpress_database_root_password' variable
+      set_fact:
+        wordpress_database_root_password: "{{ wordpress_database_root_password_input.user_input }}"
+      when: prompt_for_wordpress_database_root_password
+
+# immich database password
+    - name: Check if 'immich_database_password' is defined
+      set_fact:
+        prompt_for_immich_database_password: "{{ immich_database_password is not defined }}"
+
+    - name: Prompt for immich database password if not defined
+      pause:
+        prompt: "Please provide the immich database password (leave blank to auto-generate):"
+        echo: false
+      register: immich_database_password_input
+      when: prompt_for_immich_database_password
+
+    - name: Set 'immich_database_password' variable
+      set_fact:
+        immich_database_password: "{{ immich_database_password_input.user_input }}"
+      when: prompt_for_immich_database_password
+
     - name: Set default or generated values for empty inputs
       set_fact:
         smb_password: "{{ smb_password | default(lookup('password', '/dev/null length=15 chars=ascii_letters,digits')) }}"
