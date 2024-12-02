@@ -1,12 +1,4 @@
 ---
-# Check if the vault password file is defined
-- name: Check if vault password file is defined
-  fail:
-    msg: >
-      The `vault_password_file` must be set in `ansible.cfg` or provided at runtime
-      using the `--vault-password-file` option.
-  when: not (ansible_vault_password_file | default(None))
-
 # Check if vault.yaml exists
 - name: Check if vault.yaml exists
   stat:
