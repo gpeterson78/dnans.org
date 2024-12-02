@@ -49,26 +49,89 @@
   register: cloudflare_api_input
   no_log: true
 
-- name: Generate encrypted vault
-  ansible.builtin.shell:
-    cmd: >
-      ansible-vault encrypt_string --vault-id @prompt
-      "ansible_become_password={{ become_password_input.user_input | default('') }}"
-      --name "ansible_become_password" >> group_vars/vault.yaml &&
-      ansible-vault encrypt_string --vault-id @prompt
-      "smb_password={{ smb_password }}" --name "smb_password" >> group_vars/vault.yaml &&
-      ansible-vault encrypt_string --vault-id @prompt
-      "immich_database_password={{ immich_database_password }}"
-      --name "immich_database_password" >> group_vars/vault.yaml &&
-      ansible-vault encrypt_string --vault-id @prompt
-      "wordpress_database_password={{ wordpress_database_password }}"
-      --name "wordpress_database_password" >> group_vars/vault.yaml &&
-      ansible-vault encrypt_string --vault-id @prompt
-      "wordpress_database_root_password={{ wordpress_database_root_password }}"
-      --name "wordpress_database_root_password" >> group_vars/vault.yaml &&
-      ansible-vault encrypt_string --vault-id @prompt
-      "cloudflare_api_token={{ cloudflare_api_input.user_input | default('') }}"
-      --name "cloudflare_api_token" >> group_vars/vault.yaml
-  args:
-    warn: false
- # no_log: true
+###
+
+- name: Encrypt ansible_become_password
+  command: >
+    ansible-vault encrypt_string --vault-id @prompt
+    "ansible_become_password={{ become_password_input.user_input | default('') }}"
+    --name "ansible_become_password"
+  register: ansible_become_password_encrypted
+  no_log: true
+
+- name: Append ansible_become_password to vault.yaml
+  lineinfile:
+    path: group_vars/vault.yaml
+    line: "{{ ansible_become_password_encrypted.stdout }}"
+    create: true
+
+- name: Encrypt smb_password
+  command: >
+    ansible-vault encrypt_string --vault-id @prompt
+    "smb_password={{ smb_password }}"
+    --name "smb_password"
+  register: smb_password_encrypted
+  no_log: true
+
+- name: Append smb_password to vault.yaml
+  lineinfile:
+    path: group_vars/vault.yaml
+    line: "{{ smb_password_encrypted.stdout }}"
+    create: true
+
+- name: Encrypt immich_database_password
+  command: >
+    ansible-vault encrypt_string --vault-id @prompt
+    "immich_database_password={{ immich_database_password }}"
+    --name "immich_database_password"
+  register: immich_database_password_encrypted
+  no_log: true
+
+- name: Append immich_database_password to vault.yaml
+  lineinfile:
+    path: group_vars/vault.yaml
+    line: "{{ immich_database_password_encrypted.stdout }}"
+    create: true
+
+- name: Encrypt wordpress_database_password
+  command: >
+    ansible-vault encrypt_string --vault-id @prompt
+    "wordpress_database_password={{ wordpress_database_password }}"
+    --name "wordpress_database_password"
+  register: wordpress_database_password_encrypted
+  no_log: true
+
+- name: Append wordpress_database_password to vault.yaml
+  lineinfile:
+    path: group_vars/vault.yaml
+    line: "{{ wordpress_database_password_encrypted.stdout }}"
+    create: true
+
+- name: Encrypt wordpress_database_root_password
+  command: >
+    ansible-vault encrypt_string --vault-id @prompt
+    "wordpress_database_root_password={{ wordpress_database_root_password }}"
+    --name "wordpress_database_root_password"
+  register: wordpress_database_root_password_encrypted
+  no_log: true
+
+- name: Append wordpress_database_root_password to vault.yaml
+  lineinfile:
+    path: group_vars/vault.yaml
+    line: "{{ wordpress_database_root_password_encrypted.stdout }}"
+    create: true
+
+- name: Encrypt cloudflare_api_token
+  command: >
+    ansible-vault encrypt_string --vault-id @prompt
+    "cloudflare_api_token={{ cloudflare_api_input.user_input | default('') }}"
+    --name "cloudflare_api_token"
+  register: cloudflare_api_token_encrypted
+  no_log: true
+
+- name: Append cloudflare_api_token to vault.yaml
+  lineinfile:
+    path: group_vars/vault.yaml
+    line: "{{ cloudflare_api_token_encrypted.stdout }}"
+    create: true
+
