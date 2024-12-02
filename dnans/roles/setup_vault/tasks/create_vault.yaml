@@ -5,13 +5,13 @@
   register: become_password_input
   no_log: true
 
-- name: Prompt for smb_password
+- name: Prompt for SMB password
   pause:
     prompt: "Enter SMB password (leave empty to auto-generate):"
   register: smb_password_input
   no_log: true
 
-- name: Generate smb_password if not entered
+- name: Generate SMB password if not entered
   set_fact:
     smb_password: "{{ smb_password_input.user_input | default(lookup('password', '/dev/null chars=ascii_letters,digits length=15')) }}"
 
@@ -21,56 +21,54 @@
   register: database_password_input
   no_log: true
 
-- name: generate database password if not entered
+- name: Generate database password if not entered
   set_fact:
     database_password: "{{ database_password_input.user_input | default(lookup('password', '/dev/null chars=ascii_letters,digits length=15')) }}"
 
-- name: Set immich database password
+- name: Set Immich database password
   set_fact:
     immich_database_password: "{{ database_password }}"
 
-- name: Set wordpress_database_password
+- name: Set WordPress database password
   set_fact:
     wordpress_database_password: "{{ database_password }}"
 
-- name: Prompt for root password
+- name: Prompt for ROOT password
   pause:
     prompt: "Enter ROOT password (leave empty to auto-generate):"
-  register: database_password_input
+  register: root_password_input
   no_log: true
-  
-- name: Set root_password
-  set_fact:
-    root_password: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=31') }}"
 
-- name: Set wordpress_database_root_password
+- name: Generate ROOT password if not entered
   set_fact:
-    wordpress_database_root_password: "{{ root_password }}"
+    wordpress_database_password: "{{ root_password_input.user_input | default(lookup('password', '/dev/null chars=ascii_letters,digits length=15')) }}"
 
-- name: Prompt for cloudflare_api_token
+- name: Prompt for Cloudflare API token
   pause:
     prompt: "Enter Cloudflare API token (leave empty for default ''):"
   register: cloudflare_api_input
-
-- name: Create vault_unencrypted.yaml
-  copy:
-    dest: group_vars/vault_unencrypted.yaml
-    content: |
-      ansible_become_password: "{{ become_password_input.user_input if become_password_input.user_input != '' else omit }}"
-      smb_password: "{{ smb_password }}"
-      immich_database_password: "{{ immich_database_password }}"
-      wordpress_database_password: "{{ wordpress_database_password }}"
-      wordpress_database_root_password: "{{ wordpress_database_root_password }}"
-      cloudflare_api_token: "{{ cloudflare_api_input.user_input | default('') }}"
   no_log: true
 
-- name: Encrypt vault.yaml
-  command: >
-    ansible-vault encrypt group_vars/vault_unencrypted.yaml --output group_vars/vault.yaml
+- name: Generate encrypted vault
+  ansible.builtin.shell:
+    cmd: >
+      ansible-vault encrypt_string --vault-id @prompt
+      "ansible_become_password={{ become_password_input.user_input | default('') }}"
+      --name "ansible_become_password" >> group_vars/vault.yaml &&
+      ansible-vault encrypt_string --vault-id @prompt
+      "smb_password={{ smb_password }}" --name "smb_password" >> group_vars/vault.yaml &&
+      ansible-vault encrypt_string --vault-id @prompt
+      "immich_database_password={{ immich_database_password }}"
+      --name "immich_database_password" >> group_vars/vault.yaml &&
+      ansible-vault encrypt_string --vault-id @prompt
+      "wordpress_database_password={{ wordpress_database_password }}"
+      --name "wordpress_database_password" >> group_vars/vault.yaml &&
+      ansible-vault encrypt_string --vault-id @prompt
+      "wordpress_database_root_password={{ wordpress_database_root_password }}"
+      --name "wordpress_database_root_password" >> group_vars/vault.yaml &&
+      ansible-vault encrypt_string --vault-id @prompt
+      "cloudflare_api_token={{ cloudflare_api_input.user_input | default('') }}"
+      --name "cloudflare_api_token" >> group_vars/vault.yaml
   args:
     warn: false
-
-- name: Remove unencrypted vault file
-  file:
-    path: group_vars/vault_unencrypted.yaml
-    state: absent
+  no_log: true
