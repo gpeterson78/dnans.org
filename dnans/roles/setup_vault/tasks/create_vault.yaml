@@ -1,0 +1,43 @@
+---
+- name: Prompt for ansible_become_password
+  pause:
+    prompt: "Enter the become password (leave empty to exclude):"
+  register: become_password_input
+
+- name: Prompt for smb_password
+  pause:
+    prompt: "Enter SMB password (leave empty to auto-generate):"
+  register: smb_password_input
+
+- name: Generate smb_password if not entered
+  set_fact:
+    smb_password: "{{ smb_password_input.user_input | default(lookup('password', '/dev/null chars=ascii_letters,digits length=15')) }}"
+
+- name: Set immich_database_password
+  set_fact:
+    immich_database_password: "{{ smb_password }}"
+
+- name: Set wordpress_database_password
+  set_fact:
+    wordpress_database_password: "{{ smb_password }}"
+
+- name: Set wordpress_database_root_password
+  set_fact:
+    wordpress_database_root_password: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=31') }}"
+
+- name: Prompt for cloudflare_api_token
+  pause:
+    prompt: "Enter Cloudflare API token (leave empty for default ''):"
+  register: cloudflare_api_input
+
+- name: Create vault.yaml
+  copy:
+    dest: group_vars/vault.yaml
+    content: |
+      ansible_become_password: "{{ become_password_input.user_input if become_password_input.user_input != '' else omit }}"
+      smb_password: "{{ smb_password }}"
+      immich_database_password: "{{ immich_database_password }}"
+      wordpress_database_password: "{{ wordpress_database_password }}"
+      wordpress_database_root_password: "{{ wordpress_database_root_password }}"
+      cloudflare_api_token: "{{ cloudflare_api_input.user_input | default('') }}"
+  no_log: true

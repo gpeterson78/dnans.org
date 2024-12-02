@@ -1,0 +1,16 @@
+---
+- name: Check if vault.yaml exists
+  stat:
+    path: group_vars/vault.yaml
+  register: vault_file
+
+- name: Create vault.yaml if it doesn't exist
+  include_tasks: create_vault.yaml
+  when: not vault_file.stat.exists
+
+- name: Fail if vault.yaml exists but --ask-become-password or become password is not set
+  fail:
+    msg: >
+      This playbook must be run with `--ask-become-pass` or have the `ansible_become_password`
+      set in the vault. Edit `group_vars/vault.yaml` to include the `ansible_become_password`.
+  when: not ansible_become_password and not vault_file.stat.exists
