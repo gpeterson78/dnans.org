@@ -68,8 +68,8 @@
 - name: Encrypt the vault file
   command: >
     ansible-vault encrypt /tmp/vault_unencrypted.yaml --output group_vars/vault.yaml
-  args:
-    warn: false
+#  args:
+#    warn: false
 #  no_log: true
 
 # Remove the unencrypted temporary file
