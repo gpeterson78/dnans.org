@@ -53,7 +53,7 @@
 
 - name: Encrypt ansible_become_password
   command: >
-    ansible-vault encrypt_string --vault-id @prompt
+    ansible-vault encrypt_string
     "ansible_become_password={{ become_password_input.user_input | default('') }}"
     --name "ansible_become_password"
   register: ansible_become_password_encrypted
@@ -67,7 +67,7 @@
 
 - name: Encrypt smb_password
   command: >
-    ansible-vault encrypt_string --vault-id @prompt
+    ansible-vault encrypt_string
     "smb_password={{ smb_password }}"
     --name "smb_password"
   register: smb_password_encrypted
@@ -81,7 +81,7 @@
 
 - name: Encrypt immich_database_password
   command: >
-    ansible-vault encrypt_string --vault-id @prompt
+    ansible-vault encrypt_string
     "immich_database_password={{ immich_database_password }}"
     --name "immich_database_password"
   register: immich_database_password_encrypted
@@ -95,7 +95,7 @@
 
 - name: Encrypt wordpress_database_password
   command: >
-    ansible-vault encrypt_string --vault-id @prompt
+    ansible-vault encrypt_string
     "wordpress_database_password={{ wordpress_database_password }}"
     --name "wordpress_database_password"
   register: wordpress_database_password_encrypted
@@ -109,7 +109,7 @@
 
 - name: Encrypt wordpress_database_root_password
   command: >
-    ansible-vault encrypt_string --vault-id @prompt
+    ansible-vault encrypt_string
     "wordpress_database_root_password={{ wordpress_database_root_password }}"
     --name "wordpress_database_root_password"
   register: wordpress_database_root_password_encrypted
@@ -123,7 +123,7 @@
 
 - name: Encrypt cloudflare_api_token
   command: >
-    ansible-vault encrypt_string --vault-id @prompt
+    ansible-vault encrypt_string
     "cloudflare_api_token={{ cloudflare_api_input.user_input | default('') }}"
     --name "cloudflare_api_token"
   register: cloudflare_api_token_encrypted
@@ -134,4 +134,5 @@
     path: group_vars/vault.yaml
     line: "{{ cloudflare_api_token_encrypted.stdout }}"
     create: true
+
 
