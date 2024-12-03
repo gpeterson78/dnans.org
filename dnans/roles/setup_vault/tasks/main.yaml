@@ -9,6 +9,12 @@
   include_tasks: create_vault.yaml
   when: not vault_file.stat.exists
 
+- name: Include vault variables
+  include_vars:
+    file: group_vars/vault.yaml
+    name: vault_vars
+  no_log: true
+
 - name: Fail if vault.yaml exists but --ask-become-password or become password is not set
   fail:
     msg: >
