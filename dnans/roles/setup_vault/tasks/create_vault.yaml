@@ -25,12 +25,9 @@
   set_fact:
     database_password: "{{ database_password_input.user_input | default(lookup('password', '/dev/null chars=ascii_letters,digits length=15')) }}"
 
-- name: Set Immich database password
+- name: Set Immich and WordPress database passwords
   set_fact:
     immich_database_password: "{{ database_password }}"
-
-- name: Set WordPress database password
-  set_fact:
     wordpress_database_password: "{{ database_password }}"
 
 - name: Prompt for ROOT password
@@ -49,90 +46,34 @@
   register: cloudflare_api_input
   no_log: true
 
-###
+# Assemble all variables into a single YAML content block
+- name: Assemble vault content
+  set_fact:
+    vault_content: |
+      ansible_become_password: "{{ become_password_input.user_input | default('') }}"
+      smb_password: "{{ smb_password }}"
+      immich_database_password: "{{ immich_database_password }}"
+      wordpress_database_password: "{{ wordpress_database_password }}"
+      wordpress_database_root_password: "{{ wordpress_database_root_password }}"
+      cloudflare_api_token: "{{ cloudflare_api_input.user_input | default('') }}"
 
-- name: Encrypt ansible_become_password
-  command: >
-    ansible-vault encrypt_string
-    "ansible_become_password={{ become_password_input.user_input | default('') }}"
-    --name "ansible_become_password"
-  register: ansible_become_password_encrypted
+# Write the assembled content to a temporary file
+- name: Write unencrypted vault content to a temporary file
+  copy:
+    dest: /tmp/vault_unencrypted.yaml
+    content: "{{ vault_content }}"
   no_log: true
 
-- name: Append ansible_become_password to vault.yaml
-  lineinfile:
-    path: group_vars/vault.yaml
-    line: "{{ ansible_become_password_encrypted.stdout }}"
-    create: true
-
-- name: Encrypt smb_password
+# Encrypt the temporary file into the vault file
+- name: Encrypt the vault file
   command: >
-    ansible-vault encrypt_string
-    "smb_password={{ smb_password }}"
-    --name "smb_password"
-  register: smb_password_encrypted
+    ansible-vault encrypt /tmp/vault_unencrypted.yaml --output group_vars/vault.yaml
+  args:
+    warn: false
   no_log: true
 
-- name: Append smb_password to vault.yaml
-  lineinfile:
-    path: group_vars/vault.yaml
-    line: "{{ smb_password_encrypted.stdout }}"
-    create: true
-
-- name: Encrypt immich_database_password
-  command: >
-    ansible-vault encrypt_string
-    "immich_database_password={{ immich_database_password }}"
-    --name "immich_database_password"
-  register: immich_database_password_encrypted
-  no_log: true
-
-- name: Append immich_database_password to vault.yaml
-  lineinfile:
-    path: group_vars/vault.yaml
-    line: "{{ immich_database_password_encrypted.stdout }}"
-    create: true
-
-- name: Encrypt wordpress_database_password
-  command: >
-    ansible-vault encrypt_string
-    "wordpress_database_password={{ wordpress_database_password }}"
-    --name "wordpress_database_password"
-  register: wordpress_database_password_encrypted
-  no_log: true
-
-- name: Append wordpress_database_password to vault.yaml
-  lineinfile:
-    path: group_vars/vault.yaml
-    line: "{{ wordpress_database_password_encrypted.stdout }}"
-    create: true
-
-- name: Encrypt wordpress_database_root_password
-  command: >
-    ansible-vault encrypt_string
-    "wordpress_database_root_password={{ wordpress_database_root_password }}"
-    --name "wordpress_database_root_password"
-  register: wordpress_database_root_password_encrypted
-  no_log: true
-
-- name: Append wordpress_database_root_password to vault.yaml
-  lineinfile:
-    path: group_vars/vault.yaml
-    line: "{{ wordpress_database_root_password_encrypted.stdout }}"
-    create: true
-
-- name: Encrypt cloudflare_api_token
-  command: >
-    ansible-vault encrypt_string
-    "cloudflare_api_token={{ cloudflare_api_input.user_input | default('') }}"
-    --name "cloudflare_api_token"
-  register: cloudflare_api_token_encrypted
-  no_log: true
-
-- name: Append cloudflare_api_token to vault.yaml
-  lineinfile:
-    path: group_vars/vault.yaml
-    line: "{{ cloudflare_api_token_encrypted.stdout }}"
-    create: true
-
-
+# Remove the unencrypted temporary file
+- name: Remove the unencrypted temporary file
+  file:
+    path: /tmp/vault_unencrypted.yaml
+    state: absent
