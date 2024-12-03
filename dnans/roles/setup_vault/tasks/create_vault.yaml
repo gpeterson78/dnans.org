@@ -62,7 +62,7 @@
   copy:
     dest: /tmp/vault_unencrypted.yaml
     content: "{{ vault_content }}"
-  no_log: true
+#  no_log: true
 
 # Encrypt the temporary file into the vault file
 - name: Encrypt the vault file
@@ -70,7 +70,7 @@
     ansible-vault encrypt /tmp/vault_unencrypted.yaml --output group_vars/vault.yaml
   args:
     warn: false
-  no_log: true
+#  no_log: true
 
 # Remove the unencrypted temporary file
 - name: Remove the unencrypted temporary file
