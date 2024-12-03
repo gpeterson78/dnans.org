@@ -1,0 +1,18 @@
+services:
+  web:
+    image: httpd:latest
+    container_name: dnans
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.dnans.entrypoints=websecure
+      - traefik.http.routers.dnans.tls=true
+      - traefik.http.routers.dnans.tls.certresolver=cloudflare-staging
+      - traefik.http.routers.dnans.rule=Host(`www.dnans.org`)
+    networks:
+    - traefik-network  
+    volumes:
+      - ./content:/usr/local/apache2/htdocs/
+    command: /bin/bash -c "echo 'AddType application/json .remotemanagement' >> /usr/local/apache2/conf/httpd.conf && httpd-foreground"
+networks:
+  traefik-network:
+    external: true
