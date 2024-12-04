@@ -31,7 +31,7 @@ services:
     networks:
       - {{ docker_network_name }}     
     volumes:
-      - ./db:/var/lib/mysql
+      - ./database:/var/lib/mysql
 
 # Define the 'pma' service for phpMyAdmin.
   pma: 
