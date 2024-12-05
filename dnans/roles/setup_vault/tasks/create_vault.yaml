@@ -35,19 +35,19 @@
 #    immich_database_password: "{{ database_password }}"
 #    wordpress_database_password: "{{ database_password }}"
 
-- name: Prompt for ROOT password
+- name: Prompt for database ROOT password
   pause:
     prompt: "Enter ROOT password (leave empty to auto-generate):"
   register: root_password_input
   no_log: true
 
-- name: Generate ROOT password if not entered
+- name: Generate database ROOT password if not entered
   set_fact:
     database_root_password: >-
       {{ 
         (root_password_input.user_input | default(None)) 
         if root_password_input.user_input | length > 0 
-        else lookup('password', '/dev/null chars=ascii_letters,digits length=15') 
+        else lookup('password', '/dev/null chars=ascii_letters,digits length=31') 
       }}
 
 - name: Prompt for Cloudflare API token
