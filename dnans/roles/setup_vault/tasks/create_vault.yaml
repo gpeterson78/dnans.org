@@ -62,9 +62,8 @@
     vault_content: |
       ansible_become_password: "{{ become_password_input.user_input | default('') }}"
       smb_password: "{{ smb_password }}"
-      immich_database_password: "{{ immich_database_password }}"
-      wordpress_database_password: "{{ wordpress_database_password }}"
-      wordpress_database_root_password: "{{ wordpress_database_root_password }}"
+      database_password: "{{ database_password }}"
+      database_root_password: "{{ database_root_password }}"
       cloudflare_api_token: "{{ cloudflare_api_input.user_input | default('') }}"
 
 # Write the assembled content to a temporary file
