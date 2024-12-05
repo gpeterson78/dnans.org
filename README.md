@@ -1,6 +1,6 @@
 # dnans.org Ansible Test Playground
 
-# present state - completely broken, I'm mid-stream of a refactor of many things so this is presently a development branch
+# present state - completely broken, I'm mid-stream of a refactor of many things so this is currently a development branch
 
 dnans is [gradyp's](https://www.gradyp.com) dev environment. this is purely a place to learn and play.
 
