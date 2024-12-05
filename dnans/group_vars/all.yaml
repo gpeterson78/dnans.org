@@ -35,5 +35,4 @@ photo_share: "{{ project_path }}/shared/photos"  # Path for immich external libr
 # immich_version:             # The immich version to use. You can pin this to a specific version like "v1.71.0"
 # immich_database_name:       # default: immich
 # immich_database_user:       # default: immich
-# immich_database_password:   # default: auto generated random 16 character password
-# immich_server_path:         # default: auto generated random 31 character password
+# immich_server_path:         # default: disabled
