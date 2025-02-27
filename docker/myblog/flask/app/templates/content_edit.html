@@ -1,0 +1,34 @@
+<!-- app/templates/admin/content_edit.html -->
+{% extends 'admin/master.html' %}
+
+{% block head %}
+    {{ super() }}
+    {{ ckeditor.load() }}
+{% endblock %}
+
+{% block body %}
+    <h1>{% if post %}Edit Post{% else %}New Post{% endif %}</h1>
+    
+    <form method="POST" class="mt-4">
+        <div class="mb-3">
+            <label for="title" class="form-label">Title</label>
+            <input type="text" class="form-control" id="title" name="title" value="{{ post.title if post else '' }}" required>
+        </div>
+        
+        <div class="mb-3">
+            <label for="visibility" class="form-label">Visibility</label>
+            <select class="form-select" id="visibility" name="visibility">
+                <option value="public" {% if post and post.visibility == 'public' %}selected{% endif %}>Public</option>
+                <option value="internal" {% if post and post.visibility == 'internal' %}selected{% endif %}>Internal (Requires Login)</option>
+            </select>
+        </div>
+        
+        <div class="mb-3">
+            <label for="content" class="form-label">Content</label>
+            {{ ckeditor.create(id='content', value=post.content if post else '') }}
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="{{ url_for('content.index') }}" class="btn btn-secondary">Cancel</a>
+    </form>
+{% endblock %}

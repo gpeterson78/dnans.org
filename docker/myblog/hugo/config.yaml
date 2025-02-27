@@ -1,0 +1,29 @@
+# hugo/config.yaml
+baseURL: https://yourdomain.com
+languageCode: en-us
+title: My Blog
+theme: paper
+
+params:
+  # Theme parameters
+  description: My personal blog and family website
+  author: Your Name
+  
+  # Custom parameters for our hybrid setup
+  internalContentPrefix: /internal
+  
+# Configure content sections
+taxonomies:
+  category: categories
+  tag: tags
+  
+# Configure the media directory to match our Flask uploads
+staticDir:
+  - static
+  - ../shared/uploads
+
+# Enable raw HTML in markdown
+markup:
+  goldmark:
+    renderer:
+      unsafe: true
